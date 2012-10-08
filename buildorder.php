@@ -86,7 +86,8 @@ function extractLoop($deps, $build_order) {
 }
 
 // Main function: builds build order
-function resolve($deps, $build_order) {
+function resolve($deps) {
+	$build_order = initBuildOrder($deps);
 	$old_size = sizeof($build_order);
 	$new_size = sizeof($build_order);
 	$in_queue = sizeof($deps) - sizeof($build_order);
@@ -157,8 +158,7 @@ function run($argc, $argv) {
 	$deps = initCmdline($argc, $argv);
 	$deps = expandDeps($deps);
 
-	$build_order = initBuildOrder($deps);
-	$build_order = resolve($deps, $build_order);
+	$build_order = resolve($deps);
 
 	printArray($build_order);
 
