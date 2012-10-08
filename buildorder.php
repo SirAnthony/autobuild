@@ -54,23 +54,21 @@ function resolveLoop($loop) {
 
 	// Compare
 	$loop_errors = 0;
-	$known_loop_members = array();
+	$first_loop_member = array();
 	foreach($known_loop as $k) {
 		$found = false;
 		foreach($loop as $pkgname => $l) {
 			if ($pkgname===$k) {
 				$found = true;
-				$known_loop_members[] = $pkgname;
+				$first_loop_member[$pkgname] = $l;
 				break;
 			}
 		}
-		if (!$found) {
-			$loop_errors++;
+		if ($found) {
+			break;
 		}
 	}
-	$ret = array();
-	$ret[] = $known_loop_members[0];
-	return $ret;
+	return $first_loop_member;
 }
 
 function extractLoop($deps, $build_order) {
@@ -88,6 +86,7 @@ function resolve($deps, $build_order) {
 	$new_size = sizeof($build_order);
 	$in_queue = sizeof($deps) - sizeof($build_order);
 	$old_inqueue = $in_queue;
+	$loop_storages = array();
 	while ($in_queue>0) {
 		foreach($deps as $pkgname => $dep) {
 			if (inQueue($pkgname, $build_order)) continue;
@@ -103,15 +102,33 @@ function resolve($deps, $build_order) {
 				$in_queue--;
 			}
 		}
+		// If we have a loop storage, try to add it again
+		for ($i=0; $i<sizeof($loop_storages); $i++) {
+			$loop_storage = $loop_storages[$i];
+			if (sizeof($loop_storage)==0) continue;
+			foreach($loop_storage as $pkgname => $dep) {
+				$can_add = true;
+				foreach($dep as $d) {
+					if (!inQueue($d, $build_order)) {
+						$can_add = false;
+						break;
+					}
+				}
+				if ($can_add) {
+					$build_order[] = $pkgname;
+					$loop_storages[$i] = array();
+				}
+			}
+		}
+		
 		$old_size = $new_size;
 		$new_size = sizeof($build_order);
 		if ($old_size===$new_size) {
-			echo "loop\n";
 			// Loop detected
 			$loop = extractLoop($deps, $build_order);
 			$loop_order = resolveLoop($loop);
-			printArray($loop_order);
-			foreach($loop_order as $pkgname) {
+			$loop_storages[] = $loop_order;
+			foreach($loop_order as $pkgname => $pkgdep) {
 				$build_order[] = $pkgname;
 				$in_queue--;
 			}
