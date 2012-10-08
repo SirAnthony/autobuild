@@ -1,0 +1,6 @@
+gmp
+mpfr
+libmpc
+ppl
+cloog-ppl
+gcc
