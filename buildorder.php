@@ -47,6 +47,8 @@ function initBuildOrder($deps) {
 	}
 	return $build_order;
 }
+
+// Get first element from loop, according to known loop list
 function resolveLoop($loop) {
 	// Read known loop file
 	$loop_resolve_data = file_get_contents('known_loop');
@@ -72,6 +74,7 @@ function resolveLoop($loop) {
 	return $first_loop_member;
 }
 
+// Returns packages that were unprocessed
 function extractLoop($deps, $build_order) {
 	$loop = array();
 	foreach($deps as $pkgname => $dep) {
@@ -82,6 +85,7 @@ function extractLoop($deps, $build_order) {
 
 }
 
+// Main function: builds build order
 function resolve($deps, $build_order) {
 	$old_size = sizeof($build_order);
 	$new_size = sizeof($build_order);
