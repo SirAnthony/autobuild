@@ -14,6 +14,7 @@ Also, this script assumes that your abuild tree is placed at $HOME/abuilds. If n
 
 Usage
 -----
+At this moment, the only thing it can do is to print a build order: from scratch to packages specified to script. You can specify more than one package if you want.
 
-./buildorder.php PACKAGE_NAME
+./buildorder.php PKGNAME1 [PKGNAME2 ...]
 
