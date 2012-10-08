@@ -38,7 +38,7 @@ function get_builddeps($abuild) {
 		debug("GET_ERROR: No such file $abuild");
 		return array();
 	}
-	$handle = popen("./get_builddeps.sh $abuild", 'r');
+	$handle = popen("./get_abuild_var.sh build_deps $abuild", 'r');
 	$data = fread($handle, 65536);
 	pclose($handle);
 	if (trim(preg_replace("/\n/", '', $data))=="") return array();
