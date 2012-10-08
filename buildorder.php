@@ -68,7 +68,9 @@ function resolveLoop($loop) {
 			$loop_errors++;
 		}
 	}
-	return $known_loop_members;
+	$ret = array();
+	$ret[] = $known_loop_members[0];
+	return $ret;
 }
 
 function extractLoop($deps, $build_order) {
