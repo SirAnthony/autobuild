@@ -2,14 +2,15 @@
 <?php
 
 require_once 'functions.php';
-
+require_once 'config.php';
 
 // Fill deps with command line arguments
 function initCmdline($argc, $argv) {
+	global $ABUILD_PATH;
 	$deps = array();
 	for ($i=1; $i<$argc; $i++) {
 		$arg = $argv[$i];
-		$d = get_builddeps('/home/aix/abuilds/' . $arg . '/ABUILD');
+		$d = get_builddeps($ABUILD_PATH . '/' . $arg . '/ABUILD');
 		if (sizeof($d)==0) $d = get_deps($arg);
 		$deps[$arg] = $d;
 	}

@@ -67,7 +67,6 @@ function get_deps($pkgname) {
 }
 
 function printArray($array) {
-	echo "\n";
 	foreach($array as $b) {
 		echo $b . "\n";
 	}
