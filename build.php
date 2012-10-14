@@ -6,6 +6,9 @@ require_once 'pkgstatus.php';
 
 function getBuildInstructions($package_set) {
 	$build_order = getBuildOrder($package_set);
+	echo "---\n";
+	printArray($build_order);
+	echo "====\n";
 
 	// Place packages according to it's action types
 	$install = array();
@@ -40,8 +43,32 @@ function printBuildInstructions($install, $build, $keep, $missing) {
 
 	echo "\n\nMISSING:\n";
 	printArray($missing);
+	echo "-----\n";
+}
+
+function installPackages($install) {
+	$arg = '';
+	foreach($install as $i) {
+		$arg .= $i . ' ';
+	}
+	passthru("mpkg-install $arg");
+}
+
+function buildPackages($build) {
+	global $ABUILD_PATH;
+	foreach($build as $b) {
+		passthru("cd $ABUILD_PATH/$b && mkpkg", $ret);
+	}
 }
 
 $package_set = read_cmdline($argc, $argv);
 list($install, $build, $keep, $missing) = getBuildInstructions($package_set);
 printBuildInstructions($install, $build, $keep, $missing);
+
+if (sizeof($missing)>0) die("Errors detected: missing " . sizeof($missing) . " packages, cannot continue\n");
+
+$do = getenv('DO_BUILD');
+if ($do==="YES") {
+	installPackages($install);
+	buildPackages($build);
+}

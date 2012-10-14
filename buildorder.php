@@ -7,6 +7,7 @@ require_once 'config.php';
 function read_cmdline($argc, $argv) {
 	$ret = array();
 	for ($i=1; $i<$argc; $i++) {
+		if (trim($argv[$i])==='') continue;
 		$ret[] = $argv[$i];
 	}
 	return $ret;
@@ -36,6 +37,7 @@ function expandDeps($deps) {
 function initBuildOrder($deps) {
 	$build_order = array();
 	foreach($deps as $pkgname => $dep ) {
+		if (trim($pkgname==='')) continue;
 		if (sizeof($dep)==0) {
 			$build_order[] = $pkgname;
 		}
@@ -50,7 +52,13 @@ function getKnownLoops() {
 		if ($loop_name == '.' || $loop_name == '..') continue;
 		$loop_resolve_data = file_get_contents('loops/' . $loop_name);
 		$known_loop = explode("\n", $loop_resolve_data);
-		$ret[$loop_name] = $known_loop;
+		$kl = array();
+		foreach($known_loop as $k) {
+			$filtered_k = trim(preg_replace('/#.*/', '', $k));
+			if ($filtered_k==='') continue;
+			$kl[] = $filtered_k;
+		}
+		$ret[$loop_name] = $kl;
 	}
 	return $ret;
 }
@@ -92,7 +100,6 @@ function resolve($deps) {
 	$new_size = sizeof($build_order);
 	$in_queue = sizeof($deps) - sizeof($build_order);
 	$old_inqueue = $in_queue;
-	$loop_storages = array();
 	while ($in_queue>0) {
 		foreach($deps as $pkgname => $dep) {
 			if (inQueue($pkgname, $build_order)) continue;
@@ -108,25 +115,7 @@ function resolve($deps) {
 				$in_queue--;
 			}
 		}
-		// If we have a loop storage, try to add it again
-		for ($i=0; $i<sizeof($loop_storages); $i++) {
-			$loop_storage = $loop_storages[$i];
-			if (sizeof($loop_storage)==0) continue;
-			foreach($loop_storage as $pkgname => $dep) {
-				$can_add = true;
-				foreach($dep as $d) {
-					if (!inQueue($d, $build_order)) {
-						$can_add = false;
-						break;
-					}
-				}
-				if ($can_add) {
-					$build_order[] = $pkgname;
-					$loop_storages[$i] = array();
-				}
-			}
-		}
-		
+				
 		$old_size = $new_size;
 		$new_size = sizeof($build_order);
 		if ($old_size===$new_size) {
@@ -156,14 +145,6 @@ function resolve($deps) {
 			$new_size = sizeof($build_order);
 
 		}
-		/*if ($in_queue === $old_inqueue) {
-			echo "Queue freeze, in queue: " . $in_queue. " packages, deps: " . sizeof($deps) . ", ordered: " . sizeof($build_order) . "\n";
-			foreach($deps as $pkgname => $dep) {
-				if (inQueue($pkgname, $build_order)) continue;
-				echo "Frozen: $pkgname\n";
-			}
-			break;
-		}*/
 		$old_inqueue = $in_queue;
 	}
 	return $build_order;
