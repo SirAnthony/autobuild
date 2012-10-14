@@ -6,6 +6,9 @@ require_once 'pkgstatus.php';
 
 function getBuildInstructions($package_set) {
 	$build_order = getBuildOrder($package_set);
+	if ($build_order == FALSE) {
+		die("Ordering failed\n");
+	}
 	echo "---\n";
 	printArray($build_order);
 	echo "====\n";

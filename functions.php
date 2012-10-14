@@ -59,8 +59,8 @@ function get_builddeps($abuild) {
 // This function called when build_deps were not specified. This means that package depends only on generic build-essential packages. ATM, this is a hack.
 // The code below that was commented out were designed to get package deps from online repository. At this time, we should avoid it.
 function get_deps($pkgname) {
-	$ret = array('glibc-solibs', 'gcc');
-	//$ret = array();
+	//$ret = array('glibc-solibs', 'gcc');
+	$ret = array();
 	return $ret;
 	/*
 	debug("API CALL $pkgname");

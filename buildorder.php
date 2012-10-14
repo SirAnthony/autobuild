@@ -15,13 +15,14 @@ function read_cmdline($argc, $argv) {
 
 // Expand deps: get dependencies of all dependencies and fill array with them
 function expandDeps($deps) {
+	global $ABUILD_PATH;
 	$old_size = 0;
 	$new_size = sizeof($deps);
 	while ($old_size!=$new_size) {
 		foreach($deps as $pkgname => $pkgdeps) {
 			foreach($pkgdeps as $p) {
 				if (isset($deps[$p])) continue;
-				$d = get_builddeps($p);
+				$d = get_builddeps($ABUILD_PATH . '/' . $p . '/ABUILD');
 				if (sizeof($d)==0) $d = get_deps($p);
 				$deps[$p] = $d;
 			}
@@ -109,8 +110,10 @@ function resolve($deps) {
 					$can_add = false;
 					break;
 				}
+				echo "DEP: $pkgname => $d\n";
 			}
 			if ($can_add) {
+				echo "Adding $pkgname\n\n";
 				$build_order[] = $pkgname;
 				$in_queue--;
 			}
@@ -129,7 +132,9 @@ function resolve($deps) {
 			if ($loop_order==false) {
 				// Means we stalled, because no rule can resolve our loop
 				echo "Loop resolving failed\n";
-				printArray($loop);
+				foreach($loop as $pkgname => $d) {
+					echo "IN LOOP: $pkgname\n";
+				}
 				return false;
 
 			}
