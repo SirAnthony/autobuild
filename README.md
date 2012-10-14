@@ -9,12 +9,17 @@ This is a proof-of-concept version, so languages used are not the ones which wou
 * php 5.3
 * bash
 * wget
+* graphviz (optional, for dependency graph visualization)
+* some image viewer (optional, for displaying dependency graphs)
 
 Also, this script assumes that your abuild tree is placed at $HOME/abuilds. If not, edit config.php to change path.
 
 Usage
 -----
-At this moment, the only thing it can do is to print a build order: from scratch to packages specified to script. You can specify more than one package if you want.
+Some useful things are there, and you can try it. General usage: ./script.php pkg1 pkg2 pkg3
 
-./buildorder.php PKGNAME1 [PKGNAME2 ...]
+What do we have:
+* graph.php - generates dependency graph between specified packages and related ones. Generates depgraph.dot file, renders depgraph.dot.png and displays it if possible
+* build.php - decides what to do if we want to build specified packages. Later, it will be extended to actually do these things.
+* print_buildorder.php - prints build order for specified packages. Mostly for debugging.
 
