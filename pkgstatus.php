@@ -3,14 +3,14 @@ require_once 'config.php';
 /* This file contains functions to determine package status according to package-action.dia diagram. */
 
 
-isForcedToRebuild($pkgname, $force_array) {
+function isForcedToRebuild($pkgname, $force_array) {
 	foreach($force_array as $f) {
 		if ($f===$pkgname) return true;
 	}
 	return false;
 }
 
-isInstalled($pkgname) {
+function isInstalled($pkgname) {
 	$handle = popen("./get_installed_version.sh $pkgname");
 	$data = fread($handle, 65536);
 	pclose($handle);
@@ -18,7 +18,7 @@ isInstalled($pkgname) {
 	return true;
 }
 
-isAvailable($pkgname) {
+function isAvailable($pkgname) {
 	$handle = popen("./get_available_versions.sh $pkgname");
 	$data = fread($handle, 65536);
 	pclose($handle);
@@ -26,12 +26,14 @@ isAvailable($pkgname) {
 	return true;
 }
 
-isAbuildEsists($pkgname) {
+function isAbuildEsists($pkgname) {
 	if (file_exists($ABUILD_PATH . '/' . $pkgname . '/ABUILD')) return true;
 	return false;
 }
 
-isCanBeBuilt($pkgname) {
+function isCanBeBuilt($pkgname) {
 	// Temporarily, assume that any package can be built
 	return true;
 }
+
+
