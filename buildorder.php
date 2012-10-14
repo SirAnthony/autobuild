@@ -93,6 +93,32 @@ function extractLoop($deps, $build_order) {
 	return $loop;
 
 }
+function tryEnqueuePackage($pkgname, $add_pkgname, $dep, &$build_order, &$in_queue) {
+	if (inQueue($pkgname, $build_order)) {
+		if ($pkgname!==$add_pkgname && !inQueue($add_pkgname, $build_order)) {
+			$build_order[] = $add_pkgname;
+			$in_queue--;
+		}
+		return true;
+	}
+	$can_add = true;
+	foreach($dep as $d) {
+		if (!inQueue($d, $build_order)) {
+			$can_add = false;
+			break;
+		}
+		debug("DEP: $add_pkgname => $d\n");
+	}
+	if ($can_add) {
+		debug("Adding $add_pkgname\n\n");
+		$build_order[] = $add_pkgname;
+		$in_queue--;
+		return true;
+	}
+	return false;
+}
+
+
 
 // Main function: builds build order
 function resolve($deps) {
@@ -103,20 +129,7 @@ function resolve($deps) {
 	$old_inqueue = $in_queue;
 	while ($in_queue>0) {
 		foreach($deps as $pkgname => $dep) {
-			if (inQueue($pkgname, $build_order)) continue;
-			$can_add = true;
-			foreach($dep as $d) {
-				if (!inQueue($d, $build_order)) {
-					$can_add = false;
-					break;
-				}
-				echo "DEP: $pkgname => $d\n";
-			}
-			if ($can_add) {
-				echo "Adding $pkgname\n\n";
-				$build_order[] = $pkgname;
-				$in_queue--;
-			}
+			tryEnqueuePackage($pkgname, $pkgname, $dep, $build_order, $in_queue);
 		}
 				
 		$old_size = $new_size;
@@ -125,28 +138,48 @@ function resolve($deps) {
 			// Loop detected
 			$loop = extractLoop($deps, $build_order);
 			if (sizeof($loop)==0) {
-				echo "CODE ERROR: Loop detected, but no loop really exist\n";
-				die();
+				die("CODE ERROR: Loop detected, but no loop really exist\n");
 			}
 			$loop_order = resolveLoop($loop);
 			if ($loop_order==false) {
-				// Means we stalled, because no rule can resolve our loop
-				echo "Loop resolving failed\n";
+				debug("Stalled, maybe...\n");
+				// Stalled? Try to resolve it
+				$newloop = array();
 				foreach($loop as $pkgname => $d) {
-					echo "IN LOOP: $pkgname\n";
+					$corename = getCorePackage($pkgname);
+					debug("Trying $corename istead of $pkgname, in_queue: $in_queue\n");
+					if (tryEnqueuePackage($corename, $pkgname, $d, $build_order, $in_queue)===false) {
+						debug("Direct try failed, building newloop with $corename\n");
+						$newloop[$corename] = $d;
+					}
+					else debug("Direct try success with $corename, in_queue: $in_queue\n");
 				}
-				return false;
+				if (sizeof($newloop)==sizeof($loop)) {
+					debug("DIRECT RESOLVING FAILED\n");
+					// Direct resolving failed, try loop methods again
+					$loop = $newloop;
+					$loop_order = resolveLoop($loop);
+					if ($loop_order==false) {
+						debug("Loop resolving failed\n");
+						return false;
+					}
+				}
+				else {
+					// Reset loop data
+					$loop_order = false;
+				}
 
 			}
-			foreach($loop_order as $pkgname) {
-				$build_order[] = $pkgname;
-			}
+			if ($loop_order!=false) {
+				foreach($loop_order as $pkgname) {
+					$build_order[] = $pkgname;
+				}
 			
-			// Adjust $in_queue variable
-			foreach($loop as $loop_item => $loop_item_deps) {
-				if (inQueue($loop_item, $loop_order)) $in_queue--;
+				// Adjust $in_queue variable
+				foreach($loop as $loop_item => $loop_item_deps) {
+					if (inQueue($loop_item, $loop_order)) $in_queue--;
+				}
 			}
-			
 			$new_size = sizeof($build_order);
 
 		}

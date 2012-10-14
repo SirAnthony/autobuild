@@ -56,6 +56,31 @@ function get_builddeps($abuild) {
 	return $ret;
 }
 
+function getMultipkgSet($pkgname) {
+	global $ABUILD_PATH;
+	$abuild = $ABUILD_PATH . '/' . $pkgname . '/ABUILD';
+	if (!file_exists($abuild)) {
+		debug("GET_ERROR: No such file $abuild");
+		return array($pkgname);
+	}
+
+	$handle = popen("./get_subpackages.sh $abuild", 'r');
+	$data = fread($handle, 655360);
+	pclose($handle);
+
+	$pkglist = explode("\n", $data);
+	$ret = array();
+	foreach($pkglist as $p) {
+		if (trim($p)==='') continue;
+		$ret[] = $p;
+	}
+	return $ret;
+}
+
+function getCorePackage($pkgname) {
+	$pkglist = getMultipkgSet($pkgname);
+	return $pkglist[0];
+}
 // This function called when build_deps were not specified. This means that package depends only on generic build-essential packages. ATM, this is a hack.
 // The code below that was commented out were designed to get package deps from online repository. At this time, we should avoid it.
 function get_deps($pkgname) {
@@ -83,4 +108,13 @@ function printArray($array) {
 		echo $b . "\n";
 	}
 
+}
+
+// Filter dupes in array. Removes 2nd and others entries of each dupe items
+function filterDupes($array) {
+	$ret = array();
+	foreach($array as $a) {
+		if (!inQueue($a, $ret)) $ret[] = $a;
+	}
+	return $ret;
 }

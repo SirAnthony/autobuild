@@ -9,9 +9,6 @@ function getBuildInstructions($package_set) {
 	if ($build_order == FALSE) {
 		die("Ordering failed\n");
 	}
-	echo "---\n";
-	printArray($build_order);
-	echo "====\n";
 
 	// Place packages according to it's action types
 	$install = array();
@@ -31,9 +28,14 @@ function getBuildInstructions($package_set) {
 		default: die($b . " status detection failed, got $action\n");
 		}
 	}
+	$install = filterDupes($install);
+	$keep = filterDupes($keep);
+	$missing = filterDupes($missing);
 	return array($install, $build, $keep, $missing);
 }
 function printBuildInstructions($install, $build, $keep, $missing) {
+
+
 	echo "INSTALL:\n";
 	printArray($install);
 
