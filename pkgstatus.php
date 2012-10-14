@@ -1,16 +1,15 @@
 <?php
 require_once 'config.php';
+require_once 'functions.php';
 /* This file contains functions to determine package status according to package-action.dia diagram. */
 
 
 function isForcedToRebuild($pkgname, $force_array) {
 	foreach($force_array as $f) {
 		if ($f===$pkgname) {
-			echo "$pkgname forced to rebuild\n";
 			return true;
 		}
 	}
-	echo "$pkgname NOT forced to rebuild\n";
 	return false;
 }
 
@@ -19,10 +18,8 @@ function isInstalled($pkgname) {
 	$data = fread($handle, 65536);
 	pclose($handle);
 	if (trim(preg_replace("/\n/", '', $data))=="") {
-		echo "$pkgname NOT installed\n";
 		return false;
 	}
-	echo "$pkgname installed\n";
 	return true;
 }
 
@@ -31,26 +28,20 @@ function isAvailable($pkgname) {
 	$data = fread($handle, 65536);
 	pclose($handle);
 	if (trim(preg_replace("/\n/", '', $data))=="") {
-		echo "$pkgname NOT available\n";
 		return false;
 	}
-	echo "$pkgname NOT available\n";
 	return true;
 }
 
 function isAbuildEsists($pkgname) {
 	global $ABUILD_PATH;
 	if (file_exists($ABUILD_PATH . '/' . $pkgname . '/ABUILD')) {
-		echo "$pkgname abuild exists\n";
 		return true;
 	}
-
-	echo "$pkgname abuild NOT exist\n";
 	return false;
 }
 
 function isCanBeBuilt($pkgname) {
-	echo "$pkgname can be built\n";
 	// Temporarily, assume that any package can be built
 	return true;
 }
