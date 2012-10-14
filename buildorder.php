@@ -44,30 +44,35 @@ function initBuildOrder($deps) {
 	return $build_order;
 }
 
+// Reads all known loops
+function getKnownLoops() {
+	$dir = scandir('loops');
+	foreach($dir as $loop_name) {
+		if ($loop_name == '.' || $loop_name == '..') continue;
+		$loop_resolve_data = file_get_contents('loops/' . $loop_name);
+		$known_loop = explode("\n", $loop_resolve_data);
+		$ret[$loop_name] = $known_loop;
+	}
+	return $ret;
+}
 // Get first element from loop, according to known loop list
 function resolveLoop($loop) {
-	// Read known loop file
-	$loop_resolve_data = file_get_contents('known_loop');
-	if ($loop_resolve_data===FALSE) die("FAILED TO OPEN FILE");
-	$known_loop = explode("\n", $loop_resolve_data);
-
-	// Compare
-	$loop_errors = 0;
-	$first_loop_member = array();
-	foreach($known_loop as $k) {
-		$found = false;
-		foreach($loop as $pkgname => $l) {
-			if ($pkgname===$k) {
-				$found = true;
-				$first_loop_member[$pkgname] = $l;
-				break;
+	$known_loops = getKnownLoops();
+	// Let's search which known loop can resolve at lease some of out loop members
+	// Since loop can contain packages that are not related to loop itself, it will be enough to find any of loop member and apply this loop
+	foreach($known_loops as $loop_name => $loop_order) {
+		foreach($loop as $loop_item => $loop_item_deps) {
+			foreach($loop_order as $loop_order_item) {
+				if ($loop_item===$loop_order_item) {
+					// Yes, this is loop order rule that we need
+					return $loop_order;
+				}
 			}
 		}
-		if ($found) {
-			break;
-		}
 	}
-	return $first_loop_member;
+	return false;
+	
+
 }
 
 // Returns packages that were unprocessed
@@ -128,22 +133,38 @@ function resolve($deps) {
 		if ($old_size===$new_size) {
 			// Loop detected
 			$loop = extractLoop($deps, $build_order);
-			$loop_order = resolveLoop($loop);
-			$loop_storages[] = $loop_order;
-			foreach($loop_order as $pkgname => $pkgdep) {
-				$build_order[] = $pkgname;
-				$in_queue--;
+			if (sizeof($loop)==0) {
+				echo "CODE ERROR: Loop detected, but no loop really exist\n";
+				die();
 			}
+			$loop_order = resolveLoop($loop);
+			if ($loop_order==false) {
+				// Means we stalled, because no rule can resolve our loop
+				echo "Loop resolving failed\n";
+				printArray($loop);
+				return false;
+
+			}
+			foreach($loop_order as $pkgname) {
+				$build_order[] = $pkgname;
+			}
+			
+			// Adjust $in_queue variable
+			foreach($loop as $loop_item => $loop_item_deps) {
+				if (inQueue($loop_item, $loop_order)) $in_queue--;
+			}
+			
 			$new_size = sizeof($build_order);
+
 		}
-		if ($in_queue === $old_inqueue) {
+		/*if ($in_queue === $old_inqueue) {
 			echo "Queue freeze, in queue: " . $in_queue. " packages, deps: " . sizeof($deps) . ", ordered: " . sizeof($build_order) . "\n";
 			foreach($deps as $pkgname => $dep) {
 				if (inQueue($pkgname, $build_order)) continue;
 				echo "Frozen: $pkgname\n";
 			}
 			break;
-		}
+		}*/
 		$old_inqueue = $in_queue;
 	}
 	return $build_order;
