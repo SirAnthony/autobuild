@@ -1,13 +1,16 @@
 <?php
+
+// Prints debug messages. You can enable or disable it whenever you want
 function debug($msg) {
 	//echo $msg . "\n";
 }
 
+// Print dependency graph within $loop to $fname
 function printGraph($loop, $fname) {
 	$data = "digraph G {\n";
 	foreach($loop as $pkgname => $dep) {
 		foreach($dep as $d) {
-			$data .= "\t\"$pkgname\" -> \"$d\";\n";
+			$data .= "\t\"$d\" -> \"$pkgname\";\n";
 		}
 	}
 	$data .= "}\n";
@@ -16,7 +19,7 @@ function printGraph($loop, $fname) {
 	return $data;
 }
 
-
+// Checks if specified package is blacklisted from being built or added as dependency. This is a well-known package list and probably will never change.
 function isBlacklist($p) {
 	$blacklist = array("aaa_elflibs", "aaa_base", "aaa_terminfo", "aaa_elflibs_dummy");
 	foreach($blacklist as $b) {
@@ -25,6 +28,7 @@ function isBlacklist($p) {
 	return false;
 }
 
+// Checks if $pkgname is an $array item
 function inQueue($pkgname, $array) {
 	foreach($array as $a) {
 		if ($a===$pkgname) return true;
@@ -32,6 +36,7 @@ function inQueue($pkgname, $array) {
 	return false;
 }
 
+// Parses ABUILD and returns array of build_deps items specified there
 function get_builddeps($abuild) {
 	debug("GET: $abuild");
 	if (!file_exists($abuild)) {
@@ -51,7 +56,13 @@ function get_builddeps($abuild) {
 	return $ret;
 }
 
+// This function called when build_deps were not specified. This means that package depends only on generic build-essential packages. ATM, this is a hack.
+// The code below that was commented out were designed to get package deps from online repository. At this time, we should avoid it.
 function get_deps($pkgname) {
+	//$ret = array('glibc-solibs', 'gcc');
+	$ret = array();
+	return $ret;
+	/*
 	debug("API CALL $pkgname");
 	$handle = popen("wget -qO- 'http://api.agilialinux.ru/get_dep.php?n=" . urlencode($pkgname) . "'", 'r');
 	$data = fread($handle, 65536);
@@ -63,9 +74,10 @@ function get_deps($pkgname) {
 	foreach($deps as $d) {
 		if (!isBlacklist($d)) $ret[] = $d;
 	}
-	return $ret;
+	return $ret;*/
 }
 
+// Prints array elements (used for output results)
 function printArray($array) {
 	foreach($array as $b) {
 		echo $b . "\n";

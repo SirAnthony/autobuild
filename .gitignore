@@ -3,3 +3,6 @@
 *.dot
 *.dot.png
 *.log
+MINIMAL-FILTERED.list
+*.dia
+*.autosave

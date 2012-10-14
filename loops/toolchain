@@ -1,0 +1,6 @@
+kernel-headers
+glibc-solibs
+binutils
+gcc
+binutils
+glibc-solibs

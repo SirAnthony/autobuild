@@ -5,16 +5,12 @@ require_once 'functions.php';
 require_once 'config.php';
 
 // Fill deps with command line arguments
-function initCmdline($argc, $argv) {
-	global $ABUILD_PATH;
-	$deps = array();
+function read_cmdline($argc, $argv) {
+	$ret = array();
 	for ($i=1; $i<$argc; $i++) {
-		$arg = $argv[$i];
-		$d = get_builddeps($ABUILD_PATH . '/' . $arg . '/ABUILD');
-		if (sizeof($d)==0) $d = get_deps($arg);
-		$deps[$arg] = $d;
+		$ret[] = $argv[$i];
 	}
-	return $deps;
+	return $ret;
 }
 
 // Expand deps: get dependencies of all dependencies and fill array with them
@@ -153,12 +149,31 @@ function resolve($deps) {
 	return $build_order;
 }
 
+function getDepTree($package_set) {
+	global $ABUILD_PATH;
+	$deps = array();
+	foreach ($package_set as $arg) {
+		$d = get_builddeps($ABUILD_PATH . '/' . $arg . '/ABUILD');
+		if (sizeof($d)==0) $d = get_deps($arg);
+		$deps[$arg] = $d;
+	}
+
+	$deps = expandDeps($deps);
+	return $deps;
+
+}
+
+function getBuildOrder($package_set) {
+	$deps = getDepTree($package_set);
+	$build_order = resolve($deps);
+	return $build_order;
+
+}
 
 function run($argc, $argv) {
-	$deps = initCmdline($argc, $argv);
-	$deps = expandDeps($deps);
+	$package_set = read_cmdline($argc, $argv);
+	$build_order = getBuildOrder($package_set);
 
-	$build_order = resolve($deps);
 
 	printArray($build_order);
 
@@ -166,4 +181,4 @@ function run($argc, $argv) {
 }
 
 
-run($argc, $argv);
+//run($argc, $argv);
