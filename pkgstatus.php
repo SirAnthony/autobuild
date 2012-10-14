@@ -5,35 +5,94 @@ require_once 'config.php';
 
 function isForcedToRebuild($pkgname, $force_array) {
 	foreach($force_array as $f) {
-		if ($f===$pkgname) return true;
+		if ($f===$pkgname) {
+			echo "$pkgname forced to rebuild\n";
+			return true;
+		}
 	}
+	echo "$pkgname NOT forced to rebuild\n";
 	return false;
 }
 
 function isInstalled($pkgname) {
-	$handle = popen("./get_installed_version.sh $pkgname");
+	$handle = popen("./get_installed_version.sh $pkgname", 'r');
 	$data = fread($handle, 65536);
 	pclose($handle);
-	if (trim(preg_replace("/\n/", '', $data))=="") return false;
+	if (trim(preg_replace("/\n/", '', $data))=="") {
+		echo "$pkgname NOT installed\n";
+		return false;
+	}
+	echo "$pkgname installed\n";
 	return true;
 }
 
 function isAvailable($pkgname) {
-	$handle = popen("./get_available_versions.sh $pkgname");
+	$handle = popen("./get_available_versions.sh $pkgname", 'r');
 	$data = fread($handle, 65536);
 	pclose($handle);
-	if (trim(preg_replace("/\n/", '', $data))=="") return false;
+	if (trim(preg_replace("/\n/", '', $data))=="") {
+		echo "$pkgname NOT available\n";
+		return false;
+	}
+	echo "$pkgname NOT available\n";
 	return true;
 }
 
 function isAbuildEsists($pkgname) {
-	if (file_exists($ABUILD_PATH . '/' . $pkgname . '/ABUILD')) return true;
+	global $ABUILD_PATH;
+	if (file_exists($ABUILD_PATH . '/' . $pkgname . '/ABUILD')) {
+		echo "$pkgname abuild exists\n";
+		return true;
+	}
+
+	echo "$pkgname abuild NOT exist\n";
 	return false;
 }
 
 function isCanBeBuilt($pkgname) {
+	echo "$pkgname can be built\n";
 	// Temporarily, assume that any package can be built
 	return true;
 }
 
+function getPackageAction($pkgname, $force_array) {
+	if (isForcedToRebuild($pkgname, $force_array)) {
+		if (isAbuildEsists($pkgname)) {
+			if (isCanBeBuilt($pkgname)) {
+				return 'build';
+			}
+			else {
+				return 'fail';
+			}
+		}
+		else {
+			return 'fail';
+		}
+	}
+	else {
+		if (isInstalled($pkgname)) {
+			return 'nothing';
+		}
+		else {
+			if (isAvailable($pkgname)) {
+				return 'install';
+			}
+			else {
+				if (isAbuildEsists($pkgname)) {
+					if (isCanBeBuilt($pkgname)) {
+						return 'build';
+					}
+					else {
+						return 'fail';
+					}
+				}
+				else {
+					return 'fail';
+				}
+			}
+		}
+	}
 
+	// Being here means code failure.
+	return FALSE;
+}

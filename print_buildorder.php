@@ -2,4 +2,7 @@
 <?php
 require_once 'buildorder.php';
 
-run($argc, $argv);
+$package_set = read_cmdline($argc, $argv);
+$build_order = getBuildOrder($package_set);
+
+printArray($build_order);
