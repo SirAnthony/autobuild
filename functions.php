@@ -6,8 +6,11 @@ function debug($msg) {
 }
 
 // Print dependency graph within $loop to $fname
-function printGraph($loop, $fname) {
+function printGraph($loop, $fname, $highlight = array()) {
 	$data = "digraph G {\n";
+	foreach($highlight as $pkgname) {
+		$data .= "\t\"$pkgname\" [fontcolor = red, color = red];\n";
+	}
 	foreach($loop as $pkgname => $dep) {
 		foreach($dep as $d) {
 			$data .= "\t\"$d\" -> \"$pkgname\";\n";
