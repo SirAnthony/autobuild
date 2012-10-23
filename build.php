@@ -57,7 +57,7 @@ function installPackages($install) {
 	foreach($install as $i) {
 		$arg .= $i . ' ';
 	}
-	passthru("mpkg-install $arg");
+	passthru("mpkg-install -y $arg");
 }
 
 function buildPackages($build) {
