@@ -63,7 +63,7 @@ function installPackages($install) {
 function buildPackages($build) {
 	global $ABUILD_PATH;
 	foreach($build as $b) {
-		passthru("cd $ABUILD_PATH/$b && mkpkg", $ret);
+		passthru("cd $ABUILD_PATH/$b && mkpkg -si", $ret);
 	}
 }
 
