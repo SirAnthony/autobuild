@@ -52,6 +52,7 @@ function printBuildInstructions($install, $build, $keep, $missing) {
 }
 
 function installPackages($install) {
+	if (sizeof($install)==0) return;
 	$arg = '';
 	foreach($install as $i) {
 		$arg .= $i . ' ';
