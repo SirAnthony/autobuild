@@ -64,7 +64,13 @@ function buildPackages($build) {
 	global $ABUILD_PATH;
 	$counter = 0;
 	$total = sizeof($build);
+	$start_from = getenv("START_FROM");
+	if ($start_from == FALSE) $skip = 0;
 	foreach($build as $b) {
+		if ($counter<$start_from) {
+			$counter++;
+			continue;
+		}
 		passthru("cd $ABUILD_PATH/$b && mkpkg -si", $ret);
 		if ($ret!=0) die("Package $b failed to build, stopping.\nSuccessfully built: $counter of $total packages.\n");
 		else $counter++;
