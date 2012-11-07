@@ -120,8 +120,11 @@ function get_deps($pkgname) {
 
 // Prints array elements (used for output results)
 function printArray($array) {
+	$counter = 1;
 	foreach($array as $b) {
+		if (getenv('NUM')) echo '[' . $counter . '] ';
 		echo $b . "\n";
+		$counter++;
 	}
 
 }
