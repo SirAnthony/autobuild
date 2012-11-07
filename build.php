@@ -77,7 +77,7 @@ function buildPackages($build) {
 		passthru("cd $ABUILD_PATH/$b && mkpkg -si", $ret);
 		if ($ret!=0) {
 			if (getenv('AUTOBUILD_LOG')) file_put_contents(getenv('AUTOBUILD_LOG'), "FAILED at " . date('Y:m:d H:i:s') . "\n", FILE_APPEND);
-			die("Package $b failed to build, stopping.\nSuccessfully built: $counter of $total packages.\n");
+			if (!getenv('SKIP_FAILED') || getenv('SKIP_FAILED')!=='YES') die("Package $b failed to build, stopping.\nSuccessfully built: $counter of $total packages.\n");
 		}
 		else {
 			if (getenv('AUTOBUILD_LOG')) file_put_contents(getenv('AUTOBUILD_LOG'), "OK at " . date('Y:m:d H:i:s') . "\n", FILE_APPEND);
