@@ -2,7 +2,7 @@
 
 // Prints debug messages. You can enable or disable it whenever you want
 function debug($msg) {
-	//echo $msg . "\n";
+	if (getenv('DEBUG')) echo $msg . "\n";
 }
 
 // Print dependency graph within $loop to $fname
@@ -81,8 +81,21 @@ function getMultipkgSet($pkgname) {
 }
 
 function getCorePackage($pkgname) {
-	$pkglist = getMultipkgSet($pkgname);
-	return $pkglist[0];
+	global $ABUILD_PATH;
+	$abuild = $ABUILD_PATH . '/' . $pkgname . '/ABUILD';
+	if (!file_exists($abuild)) {
+		debug("GET_ERROR: No such file $abuild");
+		return $pkgname;
+	}
+
+	$handle = popen("./get_corepackage.sh $abuild", 'r');
+	$data = $pkgname;
+	$data = fread($handle, 655360);
+	pclose($handle);
+
+	$data = preg_replace("/\n/", '', trim($data));
+	if ($data==='') $data = $pkgname;
+	return $data;
 }
 // This function called when build_deps were not specified. This means that package depends only on generic build-essential packages. ATM, this is a hack.
 // The code below that was commented out were designed to get package deps from online repository. At this time, we should avoid it.

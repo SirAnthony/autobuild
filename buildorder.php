@@ -161,6 +161,9 @@ function resolve($deps) {
 					$loop_order = resolveLoop($loop);
 					if ($loop_order==false) {
 						debug("Loop resolving failed\n");
+						print_r($loop);
+						echo "============";
+						print_r($build_order);
 						return false;
 					}
 				}
@@ -188,6 +191,25 @@ function resolve($deps) {
 	return $build_order;
 }
 
+function mergeMultiPackages($deps) {
+	// First: get list of all packages mentioned in tree
+	$list = array();
+	foreach($deps as $package => $dep) {
+		if (!isset($list[$package])) $list[$package] = getCorePackage($package);
+		foreach($dep as $d) {
+			if (!isset($list[$d])) $list[$d] = getCorePackage($d);
+		}
+	}
+	$ret = array();
+	foreach ($deps as $package => $dep) {
+		for ($i=0; $i<sizeof($dep); $i++) {
+			$dep[$i] = $list[$dep[$i]];
+		}
+		$ret[$list[$package]] = $dep;
+	}
+	return $ret;
+}
+
 function getDepTree($package_set) {
 	global $ABUILD_PATH;
 	$deps = array();
@@ -204,6 +226,7 @@ function getDepTree($package_set) {
 
 function getBuildOrder($package_set) {
 	$deps = getDepTree($package_set);
+	if (!getenv('NO_MERGE_MULTIPKG') || getenv('NO_MERGE_MULTIPKG')!=='YES') $deps = mergeMultiPackages($deps);
 	$build_order = resolve($deps);
 	return $build_order;
 
