@@ -64,6 +64,8 @@ function buildPackages($build) {
 	global $ABUILD_PATH;
 	$counter = 0;
 	$total = sizeof($build);
+
+	if (getenv('AUTOBUILD_LOG')) file_put_contents(getenv('AUTOBUILD_LOG'), "Build started at " . date('Ymd H:i') . "\n\n", FILE_APPEND); 
 	$start_from = getenv("START_FROM");
 	if ($start_from == FALSE) $skip = 0;
 	foreach($build as $b) {
@@ -71,9 +73,16 @@ function buildPackages($build) {
 			$counter++;
 			continue;
 		}
+		if (getenv('AUTOBUILD_LOG')) file_put_contents(getenv('AUTOBUILD_LOG'), "[$counter/$total] $b: building...", FILE_APPEND); 
 		passthru("cd $ABUILD_PATH/$b && mkpkg -si", $ret);
-		if ($ret!=0) die("Package $b failed to build, stopping.\nSuccessfully built: $counter of $total packages.\n");
-		else $counter++;
+		if ($ret!=0) {
+			if (getenv('AUTOBUILD_LOG')) file_put_contents(getenv('AUTOBUILD_LOG'), "FAILED\n", FILE_APPEND);
+			die("Package $b failed to build, stopping.\nSuccessfully built: $counter of $total packages.\n");
+		}
+		else {
+			if (getenv('AUTOBUILD_LOG')) file_put_contents(getenv('AUTOBUILD_LOG'), "OK\n", FILE_APPEND);
+			$counter++;
+		}
 	}
 }
 
