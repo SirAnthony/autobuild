@@ -81,7 +81,7 @@ $package_set = read_cmdline($argc, $argv);
 list($install, $build, $keep, $missing) = getBuildInstructions($package_set);
 printBuildInstructions($install, $build, $keep, $missing);
 
-if (sizeof($missing)>0) die("Errors detected: missing " . sizeof($missing) . " packages, cannot continue\n");
+if (sizeof($missing)>0 && getenv('IGNORE_MISSING')!=='YES') die("Errors detected: missing " . sizeof($missing) . " packages, cannot continue\n");
 
 $do = getenv('DO_BUILD');
 if ($do==="YES") {
