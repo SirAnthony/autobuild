@@ -133,7 +133,7 @@ make
 mc
 mdadm
 mkfontscale
-mkpkg-git
+mkpkg
 mkpkg-vercmp
 mm
 mpfr
@@ -177,7 +177,6 @@ sgml-common
 shadow
 shared-mime-info
 slang
-slang1
 sqlite
 sudo
 sysfsutils
