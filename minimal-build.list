@@ -68,7 +68,6 @@ gcc-libs
 gdbm
 gettext
 gettext-tools
-getty-ps
 git
 glib2
 glibc-i18n
@@ -76,7 +75,6 @@ glibc-solibs
 glibc-zoneinfo
 gmp
 gnutls
-gobject-introspection
 gperf
 gpm
 grep
@@ -116,7 +114,6 @@ libmpc
 libpng
 libssh2
 libtasn1
-libtermcap
 libtirpc
 libtool
 libusb1
@@ -135,7 +132,6 @@ mdadm
 mkfontscale
 mkpkg
 mkpkg-vercmp
-mm
 mpfr
 mpkg-console
 mpkg-core
@@ -163,7 +159,6 @@ perl-XML-NamespaceSupport
 perl-XML-SAX
 perl-sgmls
 perl-xml-sax-base
-php
 pkg-config
 popt
 ppl
@@ -183,7 +178,6 @@ sysfsutils
 sysklogd
 sysvinit
 tar
-tcp_wrappers
 terminus-fonts-console
 texinfo
 time
