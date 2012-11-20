@@ -87,6 +87,7 @@ function buildPackages($build) {
 }
 
 $package_set = read_cmdline($argc, $argv);
+echo "Calculating package build order for $argc packages, please wait...\n";
 list($install, $build, $keep, $missing) = getBuildInstructions($package_set);
 printBuildInstructions($install, $build, $keep, $missing);
 
