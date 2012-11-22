@@ -1,6 +1,10 @@
 kernel-headers
 glibc-solibs
+bison
 binutils
+cloog
 gcc
 binutils
 glibc-solibs
+bison
+cloog
