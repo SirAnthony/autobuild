@@ -63,21 +63,28 @@ function getKnownLoops() {
 	}
 	return $ret;
 }
-// Get first element from loop, according to known loop list
-function resolveLoop($loop) {
+
+// Find any known loop that can resolve at least one of stucked packages
+function findKnownLoopFor($loop) {
+	// Read an array of all known loops
 	$known_loops = getKnownLoops();
-	// Let's search which known loop can resolve at lease some of out loop members
-	// Since loop can contain packages that are not related to loop itself, it will be enough to find any of loop member and apply this loop
-	foreach($known_loops as $loop_name => $loop_order) {
+
+	// Let's search which known loop can resolve at least one of out loop members
+	// Going thru all known loops...
+	foreach($known_loops as $known_loop_name => $known_loop_order) {
+		// Going thru our stalled packages (provided to function)
 		foreach($loop as $loop_item => $loop_item_deps) {
-			foreach($loop_order as $loop_order_item) {
+			// Going thru current known loop and find out
+			foreach($known_loop_order as $loop_order_item) {
+				// Check if this loop order contains this stucked package
 				if ($loop_item===$loop_order_item) {
 					// Yes, this is loop order rule that we need
-					return $loop_order;
+					return $known_loop_order;
 				}
 			}
 		}
 	}
+	// If we found nothing - return false.
 	return false;
 	
 
@@ -122,67 +129,65 @@ function tryEnqueuePackage($pkgname, $add_pkgname, $dep, &$build_order, &$in_que
 
 // Main function: builds build order
 function resolve($deps) {
+	// Initialize build order with packages that have zero dependencies
 	$build_order = initBuildOrder($deps);
+	// Initializing counters (used to detect loops)
 	$old_size = sizeof($build_order);
 	$new_size = sizeof($build_order);
 	$in_queue = sizeof($deps) - sizeof($build_order);
 	$old_inqueue = $in_queue;
+
+	// Main cycle: looping over packages while queue is not empty
 	while ($in_queue>0) {
+		// Checking each package if it is ready to be added to build_order.
+		// It means that it is:
+		// 	1) not in build_order already,
+		// 	2) all of his deps are already there
+		// If success, package is added to $build_order, and $in_queue reduces by 1.
+		// If not, just skip it
 		foreach($deps as $pkgname => $dep) {
 			tryEnqueuePackage($pkgname, $pkgname, $dep, $build_order, $in_queue);
 		}
-				
+
+		// Checking counters: we need to find out is there any advance in previous step
 		$old_size = $new_size;
 		$new_size = sizeof($build_order);
+
+		// If old and current sizes match - no advance was made.
+		// It means, that we are stuck on a dependency loop
 		if ($old_size===$new_size) {
-			// Loop detected
+			// Get list of packages that remains unprocessed. By now, we don't know which of them forms a dependency loop
 			$loop = extractLoop($deps, $build_order);
+			
+			// Debyg check (catches a case when in_queue is calculated incorrectly
 			if (sizeof($loop)==0) {
 				die("CODE ERROR: Loop detected, but no loop really exist\n");
 			}
-			$loop_order = resolveLoop($loop);
-			if ($loop_order==false) {
-				debug("Stalled, maybe...\n");
-				// Stalled? Try to resolve it
-				$newloop = array();
-				foreach($loop as $pkgname => $d) {
-					$corename = getCorePackage($pkgname);
-					debug("Trying $corename istead of $pkgname, in_queue: $in_queue\n");
-					if (tryEnqueuePackage($corename, $pkgname, $d, $build_order, $in_queue)===false) {
-						debug("Direct try failed, building newloop with $corename\n");
-						$newloop[$corename] = $d;
-					}
-					else debug("Direct try success with $corename, in_queue: $in_queue\n");
-				}
-				if (sizeof($newloop)==sizeof($loop)) {
-					debug("DIRECT RESOLVING FAILED\n");
-					// Direct resolving failed, try loop methods again
-					$loop = $newloop;
-					$loop_order = resolveLoop($loop);
-					if ($loop_order==false) {
-						debug("Loop resolving failed\n");
-						print_r($loop);
-						echo "============";
-						print_r($build_order);
-						return false;
-					}
-				}
-				else {
-					// Reset loop data
-					$loop_order = false;
-				}
 
+			// Find a known loop which contains at least one of stucked packages
+			$loop_order = findKnownLoopFor($loop);
+
+			// Check if such known loop found
+			if (!$loop_order) {
+				die("Unresolvable loop detected, fix known loops and try again");
+				printArray($loop);
 			}
-			if ($loop_order!=false) {
-				foreach($loop_order as $pkgname) {
-					$build_order[] = $pkgname;
-				}
+
+			// If we found that known loop, add it completely in queue without any checking
+			// FIXME: this is a really bad idea, since known loops may contain errors, be incomplete and so on.
+			// What we, really, need to do, is:
+			// 	1. Known loop order may be resolvable by itself - it means that it has no deps except itself and ones which are already processed. In that case, just add that loop without checking (this is a current behaviour for all cases)
+			// 	2. Known loop order may have other unprocessed deps that were not specified inside a loop. We need to build these deps first, then build a loop, and then rebuild these deps again. Maybe, rebuild a loop again (not sure).
+
+			foreach($loop_order as $pkgname) {
+				$build_order[] = $pkgname;
+			}
 			
-				// Adjust $in_queue variable
-				foreach($loop as $loop_item => $loop_item_deps) {
-					if (inQueue($loop_item, $loop_order)) $in_queue--;
-				}
+			// Adjust $in_queue variable
+			foreach($loop as $loop_item => $loop_item_deps) {
+				if (inQueue($loop_item, $loop_order)) $in_queue--;
 			}
+			
 			$new_size = sizeof($build_order);
 
 		}
@@ -226,7 +231,8 @@ function getDepTree($package_set) {
 
 function getBuildOrder($package_set) {
 	$deps = getDepTree($package_set);
-	if (!getenv('NO_MERGE_MULTIPKG') || getenv('NO_MERGE_MULTIPKG')!=='YES') $deps = mergeMultiPackages($deps);
+	// Always merge multipackages. From now, this is mandatory.
+	$deps = mergeMultiPackages($deps);
 	$build_order = resolve($deps);
 	return $build_order;
 
