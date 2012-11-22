@@ -1,5 +1,7 @@
 <?php
-
+if (getenv('DEBUG_FULL')) {
+	error_reporting(-1);
+}
 // Prints debug messages. You can enable or disable it whenever you want
 function debug($msg) {
 	if (getenv('DEBUG')) echo $msg . "\n";
