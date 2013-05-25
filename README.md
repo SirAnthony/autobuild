@@ -6,7 +6,7 @@ This scripts should build AgiliaLinux abuilds in right order. The project goal i
 Requirements
 ------------
 This is a proof-of-concept version, so languages used are not the ones which would be used in final version. At this time, dependencies are:
-* php 5.3
+* python
 * bash
 * wget
 * graphviz (optional, for dependency graph visualization)
@@ -18,8 +18,11 @@ Usage
 -----
 Some useful things are there, and you can try it. General usage: ./script.php pkg1 pkg2 pkg3
 
-What do we have:
-* graph.php - generates dependency graph between specified packages and related ones. Generates depgraph.dot file, renders depgraph.dot.png and displays it if possible
-* build.php - decides what to do if we want to build specified packages. Later, it will be extended to actually do these things.
-* print_buildorder.php - prints build order for specified packages. Mostly for debugging.
+Examples:
+* ./main.py -g filename <packages_list>
+Generates dependency graph between specified packages and related ones. Generates filename.dot file, renders filename.dot.png and displays it if possible
+* ./main.py -o <packages_list>
+Prints build order for specified packages. Mostly for debugging.
+* ./main.py -t build_source <packages_list>
+Build packages list using abuilds at build_source
 
