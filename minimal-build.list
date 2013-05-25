@@ -75,6 +75,7 @@ glibc-solibs
 glibc-zoneinfo
 gmp
 gnutls
+gobject-introspection
 gperf
 gpm
 grep

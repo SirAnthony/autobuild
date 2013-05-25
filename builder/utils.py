@@ -37,6 +37,28 @@ def gettext(text):
     return unicode(text)
 
 
+def print_graph(packages, fname, highlight=[]):
+    data = ["digraph G {"]
+    data.extend(['\t"{0}" [fontcolor = red, color = red];'.format(p.name) \
+            for p in highlight])
+    for package in packages:
+        data.extend(['\t"{1}" -> "{0}";'.format(d.name, package.name) \
+                        for d in package.deps])
+    data.append("}")
+    data = '\n'.join(data)
+    with open('{0}.dot'.format(fname), 'w') as f:
+        f.write(data)
+    try:
+        if subprocess.call(["dot", "-Tpng", "-O {0}.dot".format(fname)]):
+            logging.debug("File created but was not plotted. Plot it with \
+`dot -O{0}.dot".format(fname))
+        else:
+            logging.debug("Graph was plotted at {0}.png".format(fname))
+    except OSError:
+        pass
+    return
+
+
 class AttrDict(dict):
 
     def __init__(self, indict=None):

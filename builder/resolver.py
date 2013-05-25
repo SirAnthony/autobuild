@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 
 from builder import loop
 from builder.functions import print_array

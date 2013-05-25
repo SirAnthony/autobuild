@@ -14,7 +14,9 @@ def check_var(var):
         return expanded
     return None
 
-# Path to the user directory of henkou
+
+HOME_PATH = check_var('$HOME') or path.expanduser('~')
+# Path to the user directory
 USER_PATH = path.join(check_var('$XDG_CONFIG_HOME') or
     path.join(check_var('$HOME') or path.expanduser('~'), '.config'), 'agibuilder')
 
@@ -51,7 +53,7 @@ LOG_CONFIG = {'version': 1,
 BLACKLIST_PACKAGES = ["aaa_elflibs", "aaa_base", "aaa_terminfo", "aaa_elflibs_dummy"]
 BLACKLIST_LOOPS = ['.', '..']
 
-ABUILD_PATH = path.join("~", 'abuilds')
+ABUILD_PATH = path.join(HOME_PATH, 'abuilds')
 NUMERATE = False
 
 if not path.exists(USER_PATH):

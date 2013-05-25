@@ -7,6 +7,7 @@ import os.path
 import logging
 
 
+
 class Package(object):
 
     _cache = []
@@ -45,6 +46,29 @@ class Package(object):
         return self._deps
     deps = property(_get_deps)
 
+    def _is_installed(self):
+        if not hasattr(self, '_installed'):
+            # TODO: do direct pysqlite
+            data = popen("./get_installed_version.sh", self.name)
+            self._installed = bool(''.join(data).strip())
+        return self._installed
+    installed = property(_is_installed)
+
+    def _is_avaliable(self):
+        if not hasattr(self, '_avaliable'):
+            # TODO: do direct pysqlite
+            data = popen("./get_available_versions.sh", self.name)
+            self._avaliable = bool(''.join(data).strip())
+        return self._avaliable
+    avaliable = property(_is_avaliable)
+
+    def _is_abuild_exist(self):
+        return os.path.exists(abuild_path(self.name))
+    abuild_exist = property(_is_abuild_exist)
+
+    # Temporarily, assume that any package can be built
+    can_be_build = True
+
 
     def enqueue(self, build_order):
         """Check if all deps in build_order"""
@@ -55,6 +79,19 @@ class Package(object):
         logging.debug(_("DEP FAIL: %s => %s"), self.name,
                 ', '.join([d.name for d in diff]))
         return False
+
+
+    def action(self, force):
+        if self in force:
+            if self.abuild_exist and self.can_be_build:
+                return 'build'
+        elif self.installed:
+            return 'keep'
+        elif self.avaliable:
+            return 'install'
+        elif self.abuild_exist and self.can_be_build:
+            return 'build'
+        return 'missing'
 
 
     @staticmethod

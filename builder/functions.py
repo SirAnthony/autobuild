@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 
-from subprocess import call
 from builder import settings
 from builder.utils import popen, gettext as _
 import logging
@@ -10,31 +9,11 @@ def abuild_path(pkgname):
     return os.path.join(settings.ABUILD_PATH, pkgname, 'ABUILD')
 
 
-def print_graph(packages, fname, highlight=[]):
-    data = ["digraph G {"]
-    data.extend(['\t"{0}" [fontcolor = red, color = red];'.format(pkgname) \
-            for pkgname in highlight])
-    for package in packages:
-        data.extend(['\t"{0}" -> "{1}";'.format(d, pkgname) \
-                        for d in package.deps])
-    data.append("}")
-    data = '\n'.join(data)
-    with open('{0}.dot'.format(fname), 'w') as f:
-        f.write(data)
-    call(["dot", "-Tpng", "-O{0}.dot".format(fname)])
-    return data;
-
-
-def is_blacklist(p):
-    return p in settings.BLACKLIST_PACKAGES
-
-
 def get_multipkg_set(pkgname):
     abuild = abuild_path(pkgname)
     if not os.path.exists(abuild):
         logging.debug(_("GET_ERROR: No such file %s"), abuild)
         return [pkgname];
-
     data, error = popen("./get_subpackages.sh", abuild)
     return filter(None, data.splitlines())
 
@@ -74,8 +53,3 @@ def print_array(array, log_callback):
         item) for number, item in enumerate(array)]
     log_callback('\n'.join(array))
 
-
-
-def filter_dupes(array):
-    """Filter dupes in array. Removes 2nd and others entries of each dupe items"""
-    return list(set(array))

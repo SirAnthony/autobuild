@@ -46,7 +46,7 @@ def options_parse(prog, version, argv):
         except StopExecution:
             return False
         except TypeError:
-            arg = a
+            arg = a if opt else True
 
         if name:
             processed[name] = arg

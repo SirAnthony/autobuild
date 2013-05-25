@@ -1,5 +1,5 @@
+# -*- coding: utf-8 -*-
 
-from builder import config
 from builder.functions import print_array
 from builder.pset import PackageSet
 from builder.resolver import Resolver
@@ -8,9 +8,6 @@ import logging
 
 
 def get_build_order(package_set):
-    # First: merge package set
-    logging.info(_("Merging requested packages..."))
-    package_set = PackageSet(package_set)
     logging.info(_("Loading abuilds, this can take a time..."))
     deps = package_set.get_dep_tree()
     logging.info(_("Merging subpackages..."))
@@ -20,9 +17,3 @@ def get_build_order(package_set):
     build_order = Resolver(deps)
     #import pudb; pudb.set_trace()
     return build_order.resolve()
-
-
-if __name__ == '__main__':
-    package_list = config.package_list
-    build_order = get_build_order(package_list)
-    print_array(map(lambda x: x.name, build_order), logging.info)

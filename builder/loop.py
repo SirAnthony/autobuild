@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 
 from builder.package import Package
 from builder.pset import PackageSet

@@ -2,21 +2,22 @@
 # -*- coding: utf-8 -*-
 
 # Load logging system
+from builder import config
 from builder import settings
-from builder.config import run_commands, BaseConfig
-
-# Create default config
-default_config = BaseConfig()
-
-
-# Check for home path existence or create it
-if not os.path.isdir(settings.USER_PATH):
-    os.mkdir(settings.USER_PATH)
+from builder.buildorder import get_build_order
+from builder.build import process_list
+from builder.pset import PackageSet
+from builder.functions import print_array
+import sys
+import logging
 
 
-logging.info("Processing commands.")
-manager.process(run_commands, default_config)
+if __name__ == '__main__':
+    package_set = PackageSet(config.package_list)
+    build_order = get_build_order(package_set)
+    if getattr(settings, 'LIST_ORDER', False):
+        print_array(map(lambda x: x.name, build_order), logging.info)
+    else:
+        process_list(build_order, package_set)
 
-
-default_config.save()
-sys.exit(0)
+    sys.exit(0)
