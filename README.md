@@ -19,10 +19,13 @@ Usage
 Some useful things are there, and you can try it. General usage: ./script.php pkg1 pkg2 pkg3
 
 Examples:
-* ./main.py -g filename <packages_list>
+* `./main.py -g filename <packages_list>`
+
 Generates dependency graph between specified packages and related ones. Generates filename.dot file, renders filename.dot.png and displays it if possible
-* ./main.py -o <packages_list>
+* `./main.py -o <packages_list>`
+
 Prints build order for specified packages. Mostly for debugging.
-* ./main.py -t build_source <packages_list>
+* `./main.py -t build_source <packages_list>`
+
 Build packages list using abuilds at build_source
 
