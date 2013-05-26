@@ -27,19 +27,10 @@ class PackageSet(set):
         return processed
 
     def merge(self):
-        raise NotImplementedError("Does not needed.")
-        #package_set = array_unique(package_set);
-        #for item in self:
-        #    newdata = Package.get_core_package(item)
-
-        #for ($i=0; $i<count($package_set); $i++) {
-        #    $newdata = Package.get_core_package($package_set[$i]);
-        #    if ($package_set[$i]!==$newdata) {
-        #        $package_set[$i] = $newdata;
-        #    }
-        #}
-        #return array_unique($package_set);
-
+        for package in list(self):
+            if package.name != package.abuild:
+                self.remove(package)
+                self.add(Package(package.abuild))
 
     def merge_multi_packages(self):
         # TODO: I have no idea what this function must do

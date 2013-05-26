@@ -9,6 +9,8 @@ import logging
 
 def get_build_order(package_set):
     logging.info(_("Loading abuilds, this can take a time..."))
+    logging.info(_("Merging requested packages..."))
+    package_set.merge()
     deps = package_set.get_dep_tree()
     logging.info(_("Merging subpackages..."))
     # Always merge multipackages. From now, this is mandatory.

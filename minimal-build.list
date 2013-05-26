@@ -13,7 +13,7 @@ bdf-unifont
 bdftopcf
 binutils
 bison
-broadcom-wl
+#broadcom-wl
 btrfs-progs
 build-essential
 bzip2
@@ -87,8 +87,8 @@ icu4c
 infozip
 intltool
 iputils
-ipw2100-fw
-ipw2200-fw
+#ipw2100-fw
+#ipw2200-fw
 isl
 jfsutils
 kbd

@@ -20,9 +20,9 @@ class Loop(list):
         """Increase priority of dependences to faster loop resolving."""
         priorities = set()
         def increase_priority(item):
-            item.priority += 1
             if item in priorities:
                 return
+            item.priority += 1
             item.in_loop.append(self)
             priorities.add(item)
             for dep in item.deps:
@@ -67,9 +67,12 @@ def known_loops():
     return ret
 
 
-def loop_for(packages):
+def loop_for(packages, exist_loops):
     """Find any known loop that can resolve at least one of stucked packages"""
     packages = set(packages)
+    # Remove already counted packages
+    for l in exist_loops:
+        packages -= set(l)
     for loop_order, loop_set in __loops_set:
         if packages & loop_set:
             return Loop(loop_order)

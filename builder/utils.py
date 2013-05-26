@@ -49,7 +49,7 @@ def print_graph(packages, fname, highlight=[]):
     with open('{0}.dot'.format(fname), 'w') as f:
         f.write(data)
     try:
-        if subprocess.call(["dot", "-Tpng", "-O {0}.dot".format(fname)]):
+        if subprocess.call(["dot -Tpng -O {0}.dot".format(fname)]):
             logging.debug("File created but was not plotted. Plot it with \
 `dot -O{0}.dot".format(fname))
         else:

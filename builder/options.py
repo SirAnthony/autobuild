@@ -28,12 +28,13 @@ Usage:  [{0}] filename
 
 OPTIONS = (
     ('h', 'help', 'Show this help message and exit', None, 0, opt_help),
+    ('n', 'numerate', 'Numerate arrays items', 'numerate', 0, None),
     ('t', 'abuilds-tree', 'Specify path to directory with abuilds',
         'abuild_path', 1, None),
     ('o', 'list-order', 'Only caclulate package order and exit',
         'list_order', 0, None),
     ('s', 'start-from', 'Specify the index of package to start building. \
-All preceding packages will be skipped', 'start_from', 0, None),
+All preceding packages will be skipped', 'start_from', 1, None),
     ('c', 'skip-failed', 'Continue if some packages failed to build',
         'skip_failed', 0, None),
     ('m', 'ignore-missing', 'Ignore missing packages',

@@ -53,12 +53,12 @@ def build_packages(build):
     total = len(build) + 1
 
     logging.info("Build started.")
-    skip = getattr(settings, 'START_FROM', 0)
+    skip = int(getattr(settings, 'START_FROM', 0))
     skip_failed = getattr(settings, 'SKIP_FAILED', False)
 
     for package in build:
         counter += 1
-        if counter < skip:
+        if counter <= skip:
             continue
         s = "[{0}/{1}] {2}: building...".format(counter, total, package)
         sys.stdout.write("\x1b]2;{0}\x07".format(s))
@@ -70,7 +70,7 @@ def build_packages(build):
             logging.info("BUILD FAILED")
             if not skip_failed:
                 logging.error("%s failed to build, stopping.", package)
-                logging.info("Successfully built: %s of %s packages.", counter, total)
+                logging.info("Successfully built: %s of %s packages.", counter-1, total)
                 return
         else:
             logging.info("BUILD OK")

@@ -25,7 +25,6 @@ class Package(object):
 
     def __init__(self, name):
         self.name = name
-        self.abuild = self.get_core(name)
         self._twice = False
         self.priority = 0
         self.in_loop = []
@@ -36,6 +35,14 @@ class Package(object):
         return unicode(self.__str__())
     def __repr__(self):
         return self.__unicode__()
+
+
+    def _get_abuild(self):
+        if not hasattr(self, '_abuild'):
+            self._abuild = self.get_core(self.name)
+        return self._abuild
+    abuild = property(_get_abuild)
+
 
     def _get_deps(self):
         if not hasattr(self, '_deps'):

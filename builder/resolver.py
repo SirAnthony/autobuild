@@ -83,7 +83,7 @@ class Resolver(object):
             raise ValueError(_("CODE ERROR: Loop detected, but no loop really exist."))
 
         # Find a known loop which contains at least one of stucked packages
-        loop_order = loop.loop_for(self.unprocessed)
+        loop_order = loop.loop_for(self.unprocessed, self.loop_register)
 
         if not loop_order:
             print_array(loop_order, logging.debug)
@@ -132,10 +132,14 @@ class Resolver(object):
         # Packages have priority to be enqueued if it blocks resolving.
         # First process all priority packages:
         priorities = OrderedSet(filter(lambda x: x.priority, self.unprocessed))
+        check_len = len(check_array)
         while len(priorities):
             priorities -= check_array
             for package in priorities:
                 count += add_package(package)
+            if len(check_array) == check_len:
+                break # We in loop
+            check_len = len(check_array)
 
         # next process other packages
         for package in self.unprocessed:
@@ -147,7 +151,8 @@ class Resolver(object):
         self.step += 1
         self.log_step(self.step)
         this_move = False
-        self.unprocessed = OrderedSet(sorted(self.unprocessed,
+        self.unprocessed = OrderedSet(sorted(
+            sorted(self.unprocessed, key=lambda p: p.name),
                 lambda p1, p2: cmp(p2.priority, p1.priority)))
         step_move = self.check_ready()
         if step_move > 0:
