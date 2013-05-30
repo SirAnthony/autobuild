@@ -54,6 +54,7 @@ BLACKLIST_PACKAGES = ["aaa_elflibs", "aaa_base", "aaa_terminfo", "aaa_elflibs_du
 BLACKLIST_LOOPS = ['.', '..']
 
 ABUILD_PATH = path.join(HOME_PATH, 'abuilds')
+GIT_CACHE_DIR = "/tmp/agibuild/git"
 NUMERATE = False
 
 if not path.exists(USER_PATH):

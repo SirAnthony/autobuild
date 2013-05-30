@@ -4,7 +4,7 @@ from builder.oset import OrderedSet
 from builder.functions import print_array
 from builder.package import Package
 from builder.utils import print_graph
-from builder import settings
+from builder import settings, config
 import logging
 import subprocess
 import os
@@ -53,8 +53,9 @@ def build_packages(build):
     total = len(build) + 1
 
     logging.info("Build started.")
-    skip = int(getattr(settings, 'START_FROM', 0))
+    skip = int(config.getopt('start_from', 0))
     skip_failed = getattr(settings, 'SKIP_FAILED', False)
+    mkpkg_opts = '' if getattr(settings, 'NO_INSTALL') else 'i'
 
     for package in build:
         counter += 1
@@ -66,7 +67,7 @@ def build_packages(build):
         logging.info(s)
 
         path = os.path.join(settings.ABUILD_PATH, package.name)
-        if subprocess.call("cd {0} && mkpkg -si".format(path), shell=True):
+        if subprocess.call("cd {0} && mkpkg -s{1}".format(path, mkpkg_opts), shell=True):
             logging.info("BUILD FAILED")
             if not skip_failed:
                 logging.error("%s failed to build, stopping.", package)
@@ -79,16 +80,21 @@ def build_packages(build):
 def process_list(package_list, origin_package_set):
     packages = get_build_instructions(package_list, origin_package_set)
     print_instructions(packages)
+
+    # Check for missing packages
     if 'missing' in packages:
         if not getattr(settings, 'IGNORE_MISSING', False):
             logging.error("Errors detected: packages missing: %s",
                 ' '.join(map(lambda x: x.name, packages['missing'])))
             return
-    graph = getattr(settings, 'GRAPH_PATH', None)
+
+    # Create graph if requested
+    graph = config.getopt('graph_path', None)
     if graph:
-        highlight = getattr(settings, 'HIGHLIGHT_GRAPH', '')
+        highlight = config.getopt('highlight_graph', '')
         highlight = [Package(p) for p in highlight.split()]
         print_graph(package_list, graph, highlight)
         return
+
     install_packages(packages.get('install', []))
     build_packages(packages.get('build', []))

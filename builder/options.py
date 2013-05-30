@@ -11,11 +11,8 @@ Callback function may be anything, but if it returns False
 program execution stops after call of this functuin
 """
 
-class StopExecution(Exception):
-    pass
 
-
-def opt_help(prog_name, *args, **kwargs):
+def usage(prog_name, *args, **kwargs):
     print """\
 Usage:  [{0}] filename
         [{0}] package1, package2, package3, ...
@@ -23,39 +20,47 @@ Usage:  [{0}] filename
 """.format(''.join([x[0] for x in OPTIONS]))
     for item in OPTIONS:
         print "\t-{0} --{1}\t\t{2}".format(*item)
-    raise StopExecution
-
-
-OPTIONS = (
-    ('h', 'help', 'Show this help message and exit', None, 0, opt_help),
-    ('n', 'numerate', 'Numerate arrays items', 'numerate', 0, None),
-    ('t', 'abuilds-tree', 'Specify path to directory with abuilds',
-        'abuild_path', 1, None),
-    ('o', 'list-order', 'Only caclulate package order and exit',
-        'list_order', 0, None),
-    ('s', 'start-from', 'Specify the index of package to start building. \
-All preceding packages will be skipped', 'start_from', 1, None),
-    ('c', 'skip-failed', 'Continue if some packages failed to build',
-        'skip_failed', 0, None),
-    ('m', 'ignore-missing', 'Ignore missing packages',
-        'ignore_missing', 0, None),
-    ('r', 'no-rebuild-installed', 'Does not rebuild packages must be installed',
-        'no_rebuild_installed', 0, None),
-    ('g', 'make-graph', 'Generate dependency graph',
-        'graph_path', 1, None),
-    ('G', 'highlight-graph', 'Highlight packages in graph. Only usable with -g',
-        'highlight_graph', 1, None)
-)
-
-
-SHORT_OPTIONS = dict([('-{0}'.format(x[0]), x[-3:]) for x in OPTIONS])
-LONG_OPTIONS = dict([('--{0}'.format(x[1]), x[-3:]) for x in OPTIONS])
 
 def opt(name, mod, char):
     return '{0}{1}'.format(name, '' if not mod else char)
 
-def short_opts():
-    return ''.join([opt(x[0], x[-2], ':') for x in OPTIONS])
 
-def long_opts():
-    return [opt(x[1], x[-2], '=') for x in OPTIONS]
+CL_OPTS = (
+    ('h', 'help', 'Show this help message and exit', None, 0),
+    ('n', 'numerate', 'Numerate arrays items', 'numerate', 0),
+    ('o', 'list-order', 'Only caclulate package order and exit',
+        'list_order', 0),
+    ('s', 'start-from', 'Specify the index of package to start building. \
+All preceding packages will be skipped', 'start_from', 1),
+    ('g', 'make-graph', 'Generate dependency graph', 'graph_path', 1),
+    ('G', 'highlight-graph', 'Highlight packages in graph. Only usable with -g',
+        'highlight_graph', 1)
+)
+
+SETTINGS_OPTS = (
+    ('t', 'abuilds-tree', 'Specify path to directory with abuilds',
+        'abuild_path', 1),
+    ('m', 'ignore-missing', 'Ignore missing packages',
+        'ignore_missing', 0),
+    ('r', 'no-rebuild-installed', 'Does not rebuild packages must be installed',
+        'no_rebuild_installed', 0),
+    ('c', 'skip-failed', 'Continue if some packages failed to build',
+        'skip_failed', 0),
+    ('I', 'no-install', 'Does not install packages after build',
+        'no_install', 0)
+)
+
+
+OPTIONS = CL_OPTS + SETTINGS_OPTS
+
+
+SHORT = dict([('-{0}'.format(x[0]), x[-2:]) for x in OPTIONS])
+LONG = dict([('--{0}'.format(x[1]), x[-2:]) for x in OPTIONS])
+GETOPT_SHORT = ''.join([opt(x[0], x[-2], ':') for x in OPTIONS])
+GETOPT_LONG = [opt(x[1], x[-2], '=') for x in OPTIONS]
+CL = [opt[4] for opt in CONFIG_OPTS]
+
+
+
+__all__ = ['usage', 'OPTIONS', 'SHORT', 'LONG',
+           'GETOPT_SHORT', 'GETOPT_LONG', 'CL']

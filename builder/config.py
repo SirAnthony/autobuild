@@ -3,6 +3,7 @@
 import os, getopt, sys
 import json
 from builder import settings
+from builder import options
 from builder.options import (opt_help, short_opts, long_opts,
                             SHORT_OPTIONS, LONG_OPTIONS, StopExecution)
 from utils import AttrDict
@@ -12,10 +13,12 @@ import logging
 
 def usage(name):
     try:
-        opt_help(name)
+        options.usage(name)
     except:
         pass
     sys.exit(2)
+
+
 
 
 def options_parse(prog, version, argv):
@@ -28,7 +31,8 @@ def options_parse(prog, version, argv):
     The result has the format {section: {option: value}}
     """
     try:
-        opts, args = getopt.getopt(argv, short_opts(), long_opts())
+        opts, args = getopt.getopt(argv, options.GETOPT_SHORT,
+                                         options.GETOPT_LONG)
     except getopt.GetoptError, err:
         logging.error(err)
         usage(prog)
@@ -38,18 +42,13 @@ def options_parse(prog, version, argv):
 
     processed = {}
     for o, a in opts:
-        name, opt, callback = SHORT_OPTIONS.get(o,
-                        LONG_OPTIONS.get(o, (None, None, opt_help)))
+        if o in ('-h', '--help'):
+            usage(prog)
 
-        try:
-            arg = callback(prog, a)
-        except StopExecution:
-            return False
-        except TypeError:
-            arg = a if opt else True
-
-        if name:
-            processed[name] = arg
+        name, opt = options.SHORT.get(o,
+                    options.LONG.get(o, (None, None)))
+        tgt = CL_OPTS if name in options.CL else processed
+        tgt[name] = a if opt else True
     return processed, args
 
 
@@ -89,12 +88,15 @@ def parse_input(args):
             packages.append(item)
     return packages
 
+def getopt(name, default=None):
+    return CL_OPTS.get(name, default)
 
 
 default_opts = {
     'path': '',
 }
 
+CL_OPTS = []
 
 run_opts, run_args = options_parse(os.path.basename(sys.argv[0]),
                             settings.VERSION, sys.argv[1:])
@@ -102,4 +104,4 @@ extend_settings(run_opts)
 package_list = parse_input(run_args)
 
 
-__all__ = ['run_opts', 'run_args', 'packages_list']
+__all__ = ['run_opts', 'run_args', 'packages_list', 'getopt']
