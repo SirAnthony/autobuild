@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from builder import settings
-from builder.functions import abuild_path, popen
+from builder.utils import abuild_path, popen
 from builder.skyfront import SkyFront
 from builder.utils import gettext as _
 import os.path
