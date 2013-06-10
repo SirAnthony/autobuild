@@ -50,10 +50,10 @@ def print_graph(packages, fname, highlight=[]):
         f.write(data)
     try:
         if subprocess.call(["dot -Tpng -O {0}.dot".format(fname)]):
-            logging.debug("File created but was not plotted. Plot it with \
+            logging.info("File created but was not plotted. Plot it with \
 `dot -O{0}.dot".format(fname))
         else:
-            logging.debug("Graph was plotted at {0}.png".format(fname))
+            logging.info("Graph was plotted at {0}.png".format(fname))
     except OSError:
         pass
     return
