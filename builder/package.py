@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
 
 from builder import settings
-from builder.functions import abuild_path, popen
+from builder.utils import abuild_path, popen
+from builder.skyfront import SkyFront
 from builder.utils import gettext as _
 import os.path
 import logging
 
+mpkg_db = SkyFront('sqlite', '/var/mpkg/packages.db')
 
 
 class Package(object):
@@ -55,17 +57,19 @@ class Package(object):
 
     def _is_installed(self):
         if not hasattr(self, '_installed'):
-            # TODO: do direct pysqlite
-            data = popen("./get_installed_version.sh", self.name)
-            self._installed = bool(''.join(data).strip())
+            stat, data = mpkg_db.getRecords('packages',
+                        ['package_version', 'package_build'], limit=1,
+                        package_name=self.name, package_installed=1)
+            self._installed = bool(len(data))
         return self._installed
     installed = property(_is_installed)
 
     def _is_avaliable(self):
         if not hasattr(self, '_avaliable'):
-            # TODO: do direct pysqlite
-            data = popen("./get_available_versions.sh", self.name)
-            self._avaliable = bool(''.join(data).strip())
+            stat, data = mpkg_db.getRecords('packages',
+                            ['package_version', 'package_build'],
+                            limit=1, package_name=self.name)
+            self._avaliable = bool(len(data))
         return self._avaliable
     avaliable = property(_is_avaliable)
 

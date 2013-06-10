@@ -15,7 +15,7 @@ import logging
 if __name__ == '__main__':
     package_set = PackageSet(config.package_list)
     build_order = get_build_order(package_set)
-    if getattr(settings, 'LIST_ORDER', False):
+    if config.getopt('list_order'):
         print_array(map(lambda x: x.name, build_order), logging.info)
     else:
         process_list(build_order, package_set)

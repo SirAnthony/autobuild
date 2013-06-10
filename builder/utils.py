@@ -4,6 +4,7 @@ import cStringIO
 import logging
 import traceback
 import subprocess
+from builder import config
 
 
 def excepthook(excType, excValue, tracebackobj):
@@ -57,6 +58,30 @@ def print_graph(packages, fname, highlight=[]):
     except OSError:
         pass
     return
+
+
+def get_multipkg_set(pkgname):
+    abuild = abuild_path(pkgname)
+    if not os.path.exists(abuild):
+        logging.debug(gettext("GET_ERROR: No such file %s"), abuild)
+        return [pkgname];
+    data, error = popen("./get_subpackages.sh", abuild)
+    return filter(None, data.splitlines())
+
+
+
+def print_array(array, log_callback):
+    """Prints array elements (used for output results)"""
+    if not array:
+        logging.debug(gettext('ZERO-LENGTH ARRAY'))
+        return
+    numerate = config.getopt('numerate')
+
+    array = ["{0}{1}".format(
+        '[{0}] '.format(number) if numerate else '', item) \
+            for number, item in enumerate(array)]
+    log_callback('\n'.join(array))
+
 
 
 class AttrDict(dict):
