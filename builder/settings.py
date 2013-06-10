@@ -70,7 +70,7 @@ except ImportError:
 dictConfig(LOG_CONFIG)
 
 root_logger = logging.getLogger()
-root_logger.setLevel(logging.INFO)
+#root_logger.setLevel(logging.DEBUG)
 
 # Set hook
 #from builder.utils import excepthook

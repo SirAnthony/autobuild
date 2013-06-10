@@ -17,7 +17,7 @@ def usage(prog_name, *args, **kwargs):
 Usage:  [{0}] filename
         [{0}] package1, package2, package3, ...
 
-""".format(''.join([x[0] for x in OPTIONS]))
+""".format(GETOPT_SHORT)
     for item in OPTIONS:
         print "\t-{0} --{1}\t\t{2}".format(*item)
 
@@ -56,9 +56,9 @@ OPTIONS = CL_OPTS + SETTINGS_OPTS
 
 SHORT = dict([('-{0}'.format(x[0]), x[-2:]) for x in OPTIONS])
 LONG = dict([('--{0}'.format(x[1]), x[-2:]) for x in OPTIONS])
-GETOPT_SHORT = ''.join([opt(x[0], x[-2], ':') for x in OPTIONS])
+GETOPT_SHORT = ''.join([opt(x[0], x[-1], ':') for x in OPTIONS])
 GETOPT_LONG = [opt(x[1], x[-2], '=') for x in OPTIONS]
-CL = [opt[4] for opt in CONFIG_OPTS]
+CL = [opt[4] for opt in CL_OPTS]
 
 
 

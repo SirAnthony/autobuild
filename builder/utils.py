@@ -28,6 +28,26 @@ def excepthook(excType, excValue, tracebackobj):
     logging.error(msg)
 
 
+def force_unicode(s, encoding='utf-8', strings_only=False, errors='strict'):
+    if isinstance(s, unicode):
+        return s
+    try:
+        if not isinstance(s, str):
+            if hasattr(s, '__unicode__'):
+                s = s.__unicode__()
+            else:
+                s = unicode(bytes(s), encoding, errors)
+        else:
+            s = s.decode(encoding, errors)
+    except UnicodeDecodeError as e:
+        if not isinstance(s, Exception):
+            raise
+        else:
+            s = ' '.join([force_unicode(arg, encoding, strings_only,
+                    errors) for arg in s])
+    return s
+
+
 def popen(*args):
     process = subprocess.Popen(args,
         stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -35,7 +55,7 @@ def popen(*args):
 
 def gettext(text):
     """Localisation hook"""
-    return unicode(text)
+    return force_unicode(text)
 
 
 def print_graph(packages, fname, highlight=[]):

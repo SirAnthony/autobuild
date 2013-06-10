@@ -55,7 +55,7 @@ def build_packages(build):
     logging.info("Build started.")
     skip = int(config.getopt('start_from', 0))
     skip_failed = getattr(settings, 'SKIP_FAILED', False)
-    mkpkg_opts = '' if getattr(settings, 'NO_INSTALL') else 'i'
+    mkpkg_opts = '' if getattr(settings, 'NO_INSTALL') else '-si'
 
     for package in build:
         counter += 1
@@ -67,7 +67,7 @@ def build_packages(build):
         logging.info(s)
 
         path = os.path.join(settings.ABUILD_PATH, package.name)
-        if subprocess.call("cd {0} && mkpkg -s{1}".format(path, mkpkg_opts), shell=True):
+        if subprocess.call("cd {0} && mkpkg {1}".format(path, mkpkg_opts), shell=True):
             logging.info("BUILD FAILED")
             if not skip_failed:
                 logging.error("%s failed to build, stopping.", package)

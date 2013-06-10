@@ -1,2 +1,2 @@
 #!/bin/bash
-./main.py $(cat minimal-build.list)
+./main.py $1 $(cat packages_installed.lst)

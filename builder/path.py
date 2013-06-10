@@ -29,9 +29,9 @@ class Path(object):
     def resolve(self, path):
         return path
 
-    def check(self, path):
-        if not os.path.exists(path) on not os.path.isdir(path):
-            raise OSError(_("ABUILDs directory does not exists"))
+    def check(self):
+        if not os.path.exists(self.localpath) or not os.path.isdir(self.localpath):
+            raise OSError(_("Directory does not exists: {0}").format(self.localpath))
 
 
 class GitPath(Path):
@@ -47,7 +47,7 @@ class GitPath(Path):
         gitdir = re.sub("/", "_", url.path)
         if not os.path.exists(folder):
             os.makedirs(folder)
-        with cd(folder)
+        with cd(folder):
             self.sync(path, gitdir)
         return os.path.join(folder, gitdir)
 
@@ -68,8 +68,7 @@ class GitPath(Path):
 
 
 def guess_path(path):
-    path = None
-    if path.startwith("git:"):
+    if path.startswith("git:"):
         path = GitPath(path[4:])
     else:
         path = Path(path)

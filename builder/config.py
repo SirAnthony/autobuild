@@ -4,9 +4,6 @@ import os, getopt, sys
 import json
 from builder import settings
 from builder import options
-from builder.options import (opt_help, short_opts, long_opts,
-                            SHORT_OPTIONS, LONG_OPTIONS, StopExecution)
-from utils import AttrDict
 import re
 import logging
 
@@ -17,7 +14,6 @@ def usage(name):
     except:
         pass
     sys.exit(2)
-
 
 
 
@@ -88,7 +84,7 @@ def parse_input(args):
             packages.append(item)
     return packages
 
-def getopt(name, default=None):
+def clopt(name, default=None):
     return CL_OPTS.get(name, default)
 
 
@@ -104,4 +100,4 @@ extend_settings(run_opts)
 package_list = parse_input(run_args)
 
 
-__all__ = ['run_opts', 'run_args', 'packages_list', 'getopt']
+__all__ = ['run_opts', 'run_args', 'packages_list', 'clopt']

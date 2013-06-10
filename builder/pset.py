@@ -28,9 +28,9 @@ class PackageSet(set):
 
     def merge(self):
         for package in list(self):
-            if package.name != package.abuild:
+            if package.name != package.abuild.pkgname:
                 self.remove(package)
-                self.add(Package(package.abuild))
+                self.add(Package(package.abuild.pkgname))
 
     def merge_multi_packages(self):
         # TODO: I have no idea what this function must do
