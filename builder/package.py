@@ -2,35 +2,53 @@
 
 from builder import settings
 from builder.abuild import Abuild, AbuildError
+from builder.mset import MergableSet
 from builder.skyfront import SkyFront
-from builder.utils import gettext as _
+from builder.utils import AttrDict, popen, gettext as _
+from builder import config
 import os.path
 import logging
+
+PKG_STATUS_NAMES = ('install', 'build', 'missing', 'keep')
+PKG_STATUS = AttrDict([(name, n) for n, name in enumerate(PKG_STATUS_NAMES)])
+PKG_STATUS_STR = AttrDict([(name, name) for name in PKG_STATUS_NAMES])
+
+
+
 
 mpkg_db = SkyFront('sqlite', '/var/mpkg/packages.db')
 
 
-class Package(object):
+class PackageMeta(type):
 
-    _cache = []
+    _cache = {}
+    _provides = {}
 
-    def __new__(cls, name):
+    def __call__(cls, name, *args, **kwargs):
         """Create only one instance per package"""
-        if not name:
-            import pudb; pudb.set_trace()
-        for package in cls._cache:
-            if package.name == name:
-                return package
-        package = super(Package, cls).__new__(cls)
-        cls._cache.append(package)
+        if name in cls._cache:
+            return cls._cache[name]
+        # No alternatives
+        if name in cls._provides:
+            return cls._provides[name]
+
+        package = super(PackageMeta, cls).__call__(name, *args, **kwargs)
+        cls._cache[name] = package
         return package
 
 
+class Package(object):
+    __metaclass__ = PackageMeta
+
     def __init__(self, name):
+        #if getattr(self, "_init", False):
+        #    return
+        self._init = True
         self.name = name
         self._twice = False
         self.priority = 0
         self.in_loop = []
+        self.dep_for = set()
 
     def __str__(self):
         return "Package {0}".format(self.name)
@@ -40,56 +58,65 @@ class Package(object):
         return self.__unicode__()
 
 
-    def _get_abuild(self):
+    @property
+    def abuild(self):
         if not hasattr(self, '_abuild'):
-            self._abuild = Abuild(self.name)
-            if not self._abuild:
-                raise AbuildError(_("""Abuild for {0} not found of contains errors.
-Build stopped.""").format(self.name))
-
+            self._abuild = abuild = Abuild(self.name)
+            if not abuild:
+                logging.error(_("Abuild for %s not found of contains errors."), self.name)
+            elif abuild.provides:
+                self.__metaclass__._provides[abuild.provides] = self
         return self._abuild
-    abuild = property(_get_abuild)
 
+    @property
+    def base(self):
+        if self.abuild and self.abuild.pkgname != self.name:
+            return Package(self.abuild.pkgname)
+        return self
 
-    def _get_deps(self):
+    @property
+    def deps(self):
+        if not self.abuild_exist:
+            return frozenset()
         if not hasattr(self, '_deps'):
-            self._deps = set(map(lambda p: Package(p),
-                    filter(lambda n: n and n not in settings.BLACKLIST_PACKAGES,
-                    self.abuild.build_deps)))
+            self._deps = MergableSet(map(lambda p: Package(p),
+                filter(lambda n: n and n not in settings.BLACKLIST_PACKAGES,
+                self.abuild.build_deps)))
+            self._deps.merge(lambda p: p.abuild and p.name != p.abuild.pkgname,
+                             lambda p: Package(p.abuild.pkgname))
             if self in self._deps:
                 self._deps.remove(self)
                 self._twice = True
+            for dep in self._deps:
+                dep.dep_for.add(self)
         return self._deps
-    deps = property(_get_deps)
 
-
-    def _is_installed(self):
+    @property
+    def installed(self):
         if not hasattr(self, '_installed'):
             stat, data = mpkg_db.getRecords('packages',
                         ['package_version', 'package_build'], limit=1,
                         package_name=self.name, package_installed=1)
-            self._installed = bool(len(data))
+            self._installed = data[0] if data else ()
         return self._installed
-    installed = property(_is_installed)
 
-
-    def _is_avaliable(self):
+    @property
+    def avaliable(self):
         if not hasattr(self, '_avaliable'):
             stat, data = mpkg_db.getRecords('packages',
                             ['package_version', 'package_build'],
                             limit=1, package_name=self.name)
-            self._avaliable = bool(len(data))
+            self._avaliable = data[0] if data else ()
         return self._avaliable
-    avaliable = property(_is_avaliable)
 
 
-    def _is_abuild_exist(self):
+    @property
+    def abuild_exist(self):
         return bool(self.abuild)
-    abuild_exist = property(_is_abuild_exist)
 
-
-    # Temporarily, assume that any package can be built
-    can_be_build = True
+    @property
+    def buildable(self):
+        return self.abuild_exist
 
 
     def enqueue(self, build_order):
@@ -103,14 +130,28 @@ Build stopped.""").format(self.name))
         return False
 
 
+    def vercmp(self, version, build):
+        """Compare version by using of mpkg"""
+        if not self.abuild:
+            return 1
+        result, error = popen('mpkg-vercmp', self.abuild.pkgver, version)
+        if error:
+            raise OSError(error)
+        if int(result) is 0:
+            result = cmp(self.abuild.pkgbuild, build)
+        return int(result)
+
+
     def action(self, force):
         if self in force:
-            if self.abuild_exist and self.can_be_build:
-                return 'build'
+            if self.buildable:
+                return PKG_STATUS_STR.build
         elif self.installed:
-            return 'keep'
+            if config.clopt('update') and self.vercmp(*self.installed) > 0:
+                return PKG_STATUS_STR.build
+            return PKG_STATUS_STR.keep
         elif self.avaliable:
-            return 'install'
-        elif self.abuild_exist and self.can_be_build:
-            return 'build'
-        return 'missing'
+            return PKG_STATUS_STR.install
+        elif self.buildable:
+            return PKG_STATUS_STR.build
+        return PKG_STATUS_STR.missing

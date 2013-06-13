@@ -92,7 +92,7 @@ default_opts = {
     'path': '',
 }
 
-CL_OPTS = []
+CL_OPTS = {}
 
 run_opts, run_args = options_parse(os.path.basename(sys.argv[0]),
                             settings.VERSION, sys.argv[1:])

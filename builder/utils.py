@@ -95,7 +95,7 @@ def print_array(array, log_callback):
     if not array:
         logging.debug(gettext('ZERO-LENGTH ARRAY'))
         return
-    numerate = config.getopt('numerate')
+    numerate = config.clopt('numerate')
 
     array = ["{0}{1}".format(
         '[{0}] '.format(number) if numerate else '', item) \
@@ -115,9 +115,7 @@ class AttrDict(dict):
         try:
             return self.__getitem__(item)
         except KeyError:
-            c = AttrDict()
-            self.__setattr__(item, c)
-            return c
+            return None
 
     def __setattr__(self, item, value):
         if self.__dict__.has_key(item):

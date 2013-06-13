@@ -4,6 +4,7 @@ from builder.package import Package
 from builder.pset import PackageSet
 from builder.utils import gettext as _
 from builder import settings
+import logging
 import os
 import re
 
@@ -37,8 +38,9 @@ class Loop(list):
     def check_valid(self, packages):
         for item in self:
              if item not in packages:
-                raise ValueError(
-                    _("FATAL: {0} not found within packages").format(item.name))
+                 logging.error("""Package %s was specified in loop but was not found.
+Aborting.""", item.name)
+                 raise ValueError(_("FATAL: {0} not found within packages.").format(item.name))
 
 
     def resolvable_by(self, processed_packages):
@@ -63,13 +65,18 @@ def known_loops():
             known_loop = handler.read().splitlines()
             kl = filter(None,
                 [re.sub('#.*', '', k).strip() for k in known_loop])
-            ret[loop_name] = map(lambda name: Package(name), kl)
+            ret[loop_name] = map(lambda name: Package(name).base, kl)
     return ret
 
 
 def loop_for(packages, exist_loops):
     """Find any known loop that can resolve at least one of stucked packages"""
     packages = set(packages)
+    global __loops_set
+    if not __loops_set:
+        global __known_loops
+        __known_loops = known_loops()
+        __loops_set = map(lambda s: (s, set(s)), __known_loops.values())
     # Remove already counted packages
     for l in exist_loops:
         packages -= set(l)
@@ -79,6 +86,6 @@ def loop_for(packages, exist_loops):
     return False
 
 
-__known_loops = known_loops()
-__loops_set = map(lambda s: (s, set(s)), __known_loops.values())
+#__known_loops =  known_loops()
+__loops_set = None # map(lambda s: (s, set(s)), __known_loops.values())
 __all__ = ['loop_for', 'Loop']

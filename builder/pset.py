@@ -2,9 +2,10 @@
 
 """PackageSet class"""
 from builder.package import Package
+from builder.mset import MergableSet
 
 
-class PackageSet(set):
+class PackageSet(MergableSet):
 
     def __init__(self, package_list=set()):
         # Do merge
@@ -21,17 +22,12 @@ class PackageSet(set):
         processed = PackageSet()
         while unprocessed:
             for package in list(unprocessed):
-                unprocessed |= set(package.deps) - processed
+                unprocessed |= package.deps - processed
                 processed.add(package)
                 unprocessed.remove(package)
         return processed
 
     def merge(self):
-        for package in list(self):
-            if package.name != package.abuild.pkgname:
-                self.remove(package)
-                self.add(Package(package.abuild.pkgname))
-
-    def merge_multi_packages(self):
-        # TODO: I have no idea what this function must do
-        return PackageSet(self)
+        super(PackageSet, self).merge(
+            lambda p: p.name != p.abuild.pkgname,
+            lambda p: Package(p.abuild.pkgname))

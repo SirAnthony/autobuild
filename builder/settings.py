@@ -61,6 +61,22 @@ if not path.exists(USER_PATH):
     makedirs(USER_PATH)
 
 
+
+COLORS = {
+  'bold': '\033[1m',
+  'end': '\033[0m', # Reset
+  'title': '\033[97m', # white
+  'version': '\033[93m', # light yellow
+  'old_version': '\033[95m', # light magneta
+  'miss_dep': '\033[96m', # light cyan
+  'install': '\033[94m', # light blue
+  'build': '\033[92m', # light green
+  'missing': '\033[91m', # light red
+  'keep': '\033[37m', #light gray
+}
+
+
+
 # Load logging
 import logging
 try:
@@ -70,7 +86,7 @@ except ImportError:
 dictConfig(LOG_CONFIG)
 
 root_logger = logging.getLogger()
-#root_logger.setLevel(logging.DEBUG)
+root_logger.setLevel(logging.INFO)
 
 # Set hook
 #from builder.utils import excepthook

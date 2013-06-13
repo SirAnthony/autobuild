@@ -44,6 +44,7 @@ cdparanoia
 cdrtools
 celt
 cifs-utils
+cloog
 cmake
 compositeproto
 coreutils
@@ -109,7 +110,6 @@ flash-player
 flex
 font-alias
 font-util
-font-zekton
 fontcacheproto
 fontconfig
 fontsproto
@@ -196,6 +196,7 @@ iproute2
 iptables
 iputils
 ipython
+isl
 jasper
 jdk
 jdk-openjdk
@@ -303,10 +304,6 @@ libpng
 libproxy
 libpthread-stubs
 libraw1394
-libreoffice-common
-libreoffice-impress
-libreoffice-math
-libreoffice-writer
 librsvg
 libsamplerate
 libsexy

@@ -24,6 +24,7 @@ Usage:  [{0}] filename
 def opt(name, mod, char):
     return '{0}{1}'.format(name, '' if not mod else char)
 
+# TODO: rename options
 
 CL_OPTS = (
     ('h', 'help', 'Show this help message and exit', None, 0),
@@ -34,20 +35,26 @@ CL_OPTS = (
 All preceding packages will be skipped', 'start_from', 1),
     ('g', 'make-graph', 'Generate dependency graph', 'graph_path', 1),
     ('G', 'highlight-graph', 'Highlight packages in graph. Only usable with -g',
-        'highlight_graph', 1)
+        'highlight_graph', 1),
+    ('d', 'with-deps-only', 'Stop if packages has no deps', 'with_deps', 0),
+    ('u', 'update', 'Update installed packages.', 'update', 0),
+    ('k', 'build-keep', 'Rebuild packages whick selected for keep.', 'build_keep', 0)
 )
 
 SETTINGS_OPTS = (
+    ('a', 'ask', 'Wait for user desigion to build packages', 'ask', 0),
     ('t', 'abuilds-tree', 'Specify path to directory with abuilds',
         'abuild_path', 1),
     ('m', 'ignore-missing', 'Ignore missing packages',
         'ignore_missing', 0),
     ('r', 'no-rebuild-installed', 'Does not rebuild packages must be installed',
         'no_rebuild_installed', 0),
-    ('c', 'skip-failed', 'Continue if some packages failed to build',
+    ('f', 'skip-failed', 'Continue if some packages failed to build',
         'skip_failed', 0),
     ('I', 'no-install', 'Does not install packages after build',
-        'no_install', 0)
+        'no_install', 0),
+    ('C', 'color-output', 'Add colors to output', 'colorize', 0),
+    ('D', 'with-deps-print', 'Print packages depend on current package', 'print_depends', 0)
 )
 
 
@@ -58,7 +65,7 @@ SHORT = dict([('-{0}'.format(x[0]), x[-2:]) for x in OPTIONS])
 LONG = dict([('--{0}'.format(x[1]), x[-2:]) for x in OPTIONS])
 GETOPT_SHORT = ''.join([opt(x[0], x[-1], ':') for x in OPTIONS])
 GETOPT_LONG = [opt(x[1], x[-2], '=') for x in OPTIONS]
-CL = [opt[4] for opt in CL_OPTS]
+CL = [opt[3] for opt in CL_OPTS]
 
 
 

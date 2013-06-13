@@ -20,7 +20,7 @@ class Resolver(object):
 
     def __init__(self, packages):
         if not isinstance(packages, PackageSet):
-            raise TypeError(_("Bad type for package list"))
+            raise TypeError(_("Bad type for package list: {0}").format(type(packages)))
         self.packages = packages
 
 
