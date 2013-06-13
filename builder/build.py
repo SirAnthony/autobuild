@@ -97,7 +97,7 @@ def get_build_instructions(package_list, origin_package_set):
 def install_packages(install):
     if not install:
         return
-    subprocess.check_call(['mpkg-install -y {0}'.format(
+    subprocess.check_call(['mpkg-install {0}'.format(
             ' '.join(map(lambda x: x.name, install)))], shell=True)
 
 

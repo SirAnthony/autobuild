@@ -38,7 +38,8 @@ All preceding packages will be skipped', 'start_from', 1),
         'highlight_graph', 1),
     ('d', 'with-deps-only', 'Stop if packages has no deps', 'with_deps', 0),
     ('u', 'update', 'Update installed packages.', 'update', 0),
-    ('k', 'build-keep', 'Rebuild packages whick selected for keep.', 'build_keep', 0)
+    ('k', 'build-keep', 'Rebuild packages whick selected for keep.', 'build_keep', 0),
+    ('i', 'skip-install', 'Does not install anything before build.', 'skip_install', 0)
 )
 
 SETTINGS_OPTS = (
@@ -47,7 +48,7 @@ SETTINGS_OPTS = (
         'abuild_path', 1),
     ('m', 'ignore-missing', 'Ignore missing packages',
         'ignore_missing', 0),
-    ('r', 'no-rebuild-installed', 'Does not rebuild packages must be installed',
+    ('R', 'no-rebuild-installed', 'Does not rebuild packages must be installed',
         'no_rebuild_installed', 0),
     ('f', 'skip-failed', 'Continue if some packages failed to build',
         'skip_failed', 0),

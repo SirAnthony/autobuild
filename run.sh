@@ -1,2 +1,3 @@
 #!/bin/bash
-./main.py $1 $(cat packages_installed.lst)
+#shift
+./main.py "$@" $(cat packages_installed.lst)

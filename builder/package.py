@@ -150,7 +150,7 @@ class Package(object):
             if config.clopt('update') and self.vercmp(*self.installed) > 0:
                 return PKG_STATUS_STR.build
             return PKG_STATUS_STR.keep
-        elif self.avaliable:
+        elif self.avaliable and not config.clopt('skip_install'):
             return PKG_STATUS_STR.install
         elif self.buildable:
             return PKG_STATUS_STR.build
