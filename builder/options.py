@@ -1,11 +1,9 @@
 # -*- coding: utf-8 -*-
 
-import logging
-
 """Options module
 This module holds all options program have
 Options format:
-    (short_name, long_name, description, return_name, arguments_count, processing_callback)
+    (short_name, long_name, description, internal_name, arguments_count)
 
 Callback function may be anything, but if it returns False
 program execution stops after call of this functuin
@@ -54,7 +52,7 @@ SETTINGS_OPTS = (
         'skip_failed', 0),
     ('I', 'no-install', 'Does not install packages after build',
         'no_install', 0),
-    ('C', 'color-output', 'Add colors to output', 'colorize', 0),
+    ('C', 'no-color', 'Disable colors of output', 'no_color', 0),
     ('D', 'with-deps-print', 'Print packages depend on current package', 'print_depends', 0)
 )
 

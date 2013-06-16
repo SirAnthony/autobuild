@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
-from builder import settings
-from utils import gettext as _
+from . import settings
+from .output import error as _e
 from urlparse import urlsplit
 import os
 import re
@@ -31,7 +31,8 @@ class Path(object):
 
     def check(self):
         if not os.path.exists(self.localpath) or not os.path.isdir(self.localpath):
-            raise OSError(_("Directory does not exists: {0}").format(self.localpath))
+            raise _e("{c.red}Directory does not exists: {c.magnetta}{0}",
+                    OSError, self.localpath)
 
 
 class GitPath(Path):

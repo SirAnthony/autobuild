@@ -2,10 +2,10 @@
 
 import os, getopt, sys
 import json
-from builder import settings
-from builder import options
+from . import settings
+from . import options
+from .output import error as _e
 import re
-import logging
 
 
 def usage(name):
@@ -30,7 +30,7 @@ def options_parse(prog, version, argv):
         opts, args = getopt.getopt(argv, options.GETOPT_SHORT,
                                          options.GETOPT_LONG)
     except getopt.GetoptError, err:
-        logging.error(err)
+        _e(err)
         usage(prog)
 
     if not args:
@@ -63,7 +63,7 @@ def extend_settings(args):
         pass
 
     if 'config_path' in config_dict:
-        logging.error('Cannot rewrite config path in config file')
+        _e('Cannot rewrite config path in config file')
         del config_dict['config_path']
 
     extdict = dict(default_opts, **config_dict)

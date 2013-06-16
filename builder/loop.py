@@ -1,10 +1,9 @@
 # -*- coding: utf-8 -*-
 
-from builder.package import Package
-from builder.pset import PackageSet
-from builder.utils import gettext as _
-from builder import settings
-import logging
+from . import settings
+from .output import error as _e
+from .package import Package
+from .pset import PackageSet
 import os
 import re
 
@@ -37,11 +36,12 @@ class Loop(list):
 
     def check_valid(self, packages):
         for item in self:
-             if item not in packages:
-                 logging.error("""Package %s was specified in loop but was not found.
-Aborting.""", item.name)
-                 raise ValueError(_("FATAL: {0} not found within packages.").format(item.name))
-
+            if item not in packages:
+                _e("""{c.red}Package {c.yellow}{0}{c.red} was """\
+                   """specified in loop but was not found. Aborting.""",
+                   None, item.name)
+                raise _e("""{c.red}FATAL: {c.yellow}{0}{c.red} not """\
+                    """found within packages.""", ValueError, item.name)
 
     def resolvable_by(self, processed_packages):
         for package in self:

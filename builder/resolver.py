@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
 
-from builder import loop
-from builder.functions import print_array
-from builder.oset import OrderedSet
-from builder.pset import PackageSet
-from builder.utils import gettext as _
-import logging
+from . import loop
+from .oset import OrderedSet
+from .pset import PackageSet
+from .utils import print_array
+from .output import ( info as _,
+                      debug as _d,
+                      error as _e )
+
 
 
 def get_combined_check_list(build_order, loop_register_data):
@@ -20,26 +22,30 @@ class Resolver(object):
 
     def __init__(self, packages):
         if not isinstance(packages, PackageSet):
-            raise TypeError(_("Bad type for package list: {0}").format(type(packages)))
+            raise _e("{c.red}Bad type for package list: {c.yellow}{0}",
+                        TypeError, type(packages))
         self.packages = packages
 
 
     def init_resolver(self):
         self.step = 0
-        self.unprocessed = OrderedSet()
-        self.build_order = []
         self.loop_register = []
-        for package in self.packages:
-            if not package.deps:
-                # Initialize build order with packages that have zero dependencies
-                self.build_order.append(package)
-            else:
-                self.unprocessed.add(package)
+
+        # Initialize build order with packages that have zero dependencies
+        build_order = set(filter(lambda p: not p.deps, self.packages))
+        unprocessed = set(self.packages) - build_order
+
+        self.build_order = sorted(build_order, key=lambda p: p.name)
+        self.unprocessed = sorted(
+            sorted(unprocessed, key=lambda p: p.name),
+                lambda p1, p2: cmp(p2.priority, p1.priority))
 
 
     def log_step(self, part):
-        logging.info(_("Step %s/part %s, in queue: %s packages, enqueued: %s"),
-                self.step, part, len(self.unprocessed), len(self.build_order))
+        _("""{c.white}Step {c.bold}{c.yellow}{0}{c.end}{c.white}/part """\
+          """{c.bold}{c.yellow}{1}{c.end}, in queue: {c.cyan}{2}{c.white}"""\
+          """ packages, enqueued: {c.green}{3}{c.white}.""",
+            self.step, part, len(self.unprocessed), len(self.build_order))
 
 
     def resolve_loop(self, l):
@@ -50,19 +56,21 @@ class Resolver(object):
         loop_set = set(l)
         stuck_position = l.position
         build_order = self.build_order
+        unprocessed = self.unprocessed
 
-        logging.debug("\n\n\n{0}Loop order detected to be resolvable. Loop itself:{0}".format('-' * 11))
-        print_array(l, logging.debug)
-        logging.debug("{0}Build order:{0}".format('='*31))
-        print_array(build_order, logging.debug)
-        logging.debug("{0}\n\n".format('-'*74))
+        _d("\n\n\n{0}Loop order detected to be resolvable. Loop itself:{0}", '-'*11)
+        print_array(l, _d)
+        _d("{0}Build order:{0}", '='*31)
+        print_array(build_order, _d)
+        _d("{0}\n\n", '-'*74)
 
         # Add loop depends
         merge_position = len(build_order)
         build_order.extend(l)
 
         # Remove packages from queue
-        self.unprocessed -= loop_set
+        for item in loop_set:
+            unprocessed.remove(item)
 
         # Re-add packages that were between and depend on loop
         for index in range(stuck_position, merge_position):
@@ -70,7 +78,7 @@ class Resolver(object):
             if loop_set & pkg.deps:
                 build_order.append(pkg)
 
-        logging.debug("Finished loop")
+        _d("Finished loop")
         l.processed = True
         self.loop_register.remove(l)
 
@@ -80,21 +88,21 @@ class Resolver(object):
     def check_loops(self):
         # Debug check (catches a case when in_queue is calculated incorrectly
         if not self.unprocessed:
-            raise ValueError(_("CODE ERROR: Loop detected, but no loop really exist."))
+            raise _e("CODE ERROR: Loop detected, but no loop really exist.", ValueError)
 
         # Find a known loop which contains at least one of stucked packages
         loop_order = loop.loop_for(self.unprocessed, self.loop_register)
 
         if not loop_order:
             print_array(loop_order, logging.debug)
-            raise ValueError(_("Unresolvable loop detected, fix known loops and try again"))
+            raise _("Unresolvable loop detected, fix known loops and try again", ValueError)
 
         # Throw error if loop is invalid
         loop_order.check_valid(self.packages)
 
         loop_order.position = len(self.build_order)
         self.loop_register.append(loop_order)
-        logging.debug(_("Registering loop: %s"), len(self.loop_register))
+        _d("Registering loop: {0}", self.loop_register)
 
 
     def advance_loops(self):
@@ -106,24 +114,29 @@ class Resolver(object):
 
 
     def check_ready(self):
-        # Checking each package if it is ready to be added to build_order.
-        # It means that it is:
-        #  1) not in build_order already,
-        #  2) all of his deps are already there
-        # If success, package is added to build_order
-        check_array = get_combined_check_list(self.build_order, self.loop_register)
+        """
+Checking each package if it is ready to be added to build_order.
+It means:
+  1) not in build_order already,
+  2) all of his deps are already there
+If success, package is added to build_order
+"""
+
         count = 0
+        unprocessed = self.unprocessed
+        build_order = self.build_order
+        check_array = get_combined_check_list(build_order, self.loop_register)
 
         def add_package(package):
             if package in check_array or \
                     not package.enqueue(check_array):
                 return 0
-            self.unprocessed.remove(package)
+            unprocessed.remove(package)
             check_array.add(package)
-            self.build_order.append(package)
+            build_order.append(package)
             # Add package twice if it depends on itself
             if package._twice:
-                self.build_order.append(package)
+                build_order.append(package)
             # Check for resolved loops
             for l in package.in_loop:
                 self.resolve_loop(l)
@@ -131,7 +144,7 @@ class Resolver(object):
 
         # Packages have priority to be enqueued if it blocks resolving.
         # First process all priority packages:
-        priorities = OrderedSet(filter(lambda x: x.priority, self.unprocessed))
+        priorities = OrderedSet(filter(lambda x: x.priority, unprocessed))
         check_len = len(check_array)
         while len(priorities):
             priorities -= check_array
@@ -142,28 +155,26 @@ class Resolver(object):
             check_len = len(check_array)
 
         # next process other packages
-        for package in self.unprocessed:
+        for package in unprocessed[:]:
             count += add_package(package)
 
         return count
+
 
     def _next(self):
         self.step += 1
         self.log_step(self.step)
         this_move = False
-        self.unprocessed = OrderedSet(sorted(
-            sorted(self.unprocessed, key=lambda p: p.name),
-                lambda p1, p2: cmp(p2.priority, p1.priority)))
         step_move = self.check_ready()
         if step_move > 0:
             this_move = True
-            logging.info(_("Part 1: move %s"), step_move)
+            _d("{c.white}Part 1: move {c.yellow}{0}", step_move)
 
         # At this point, try to advance with loops
         loop_move = self.advance_loops()
         if loop_move:
             this_move = True
-            logging.info("Part 2 (LOOP): move %s", loop_move)
+            _d("{c.white}Part 2 (LOOP): move {c.yellow}{0}", loop_move)
 
         # Checking counters: we need to find out is there any advance in previous step
         # If old and current sizes match - no advance was made.

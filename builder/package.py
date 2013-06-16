@@ -1,13 +1,18 @@
 # -*- coding: utf-8 -*-
 
-from builder import settings
-from builder.abuild import Abuild, AbuildError
-from builder.mset import MergableSet
-from builder.skyfront import SkyFront
-from builder.utils import AttrDict, popen, gettext as _
-from builder import config
+from . import settings, config
+from .abuild import Abuild, AbuildError
+from .adict import AttrDict
+from .mset import MergableSet
+from .skyfront import SkyFront
+from .utils import popen
+from .output import (info as _,
+                     debug as _d,
+                     warn as _w,
+                     error as _e )
 import os.path
-import logging
+
+
 
 PKG_STATUS_NAMES = ('install', 'build', 'missing', 'keep')
 PKG_STATUS = AttrDict([(name, n) for n, name in enumerate(PKG_STATUS_NAMES)])
@@ -24,17 +29,61 @@ class PackageMeta(type):
     _cache = {}
     _provides = {}
 
-    def __call__(cls, name, *args, **kwargs):
+    def __call__(cls, name, claimer=None, *args, **kwargs):
         """Create only one instance per package"""
+
         if name in cls._cache:
             return cls._cache[name]
         # No alternatives
         if name in cls._provides:
-            return cls._provides[name]
+            provider = cls._provides[name]
+            if not claimer or claimer.name == name:
+                return provider
+            _w("""{c.yellow}Looks like one package ({c.cyan}{0}"""\
+               """{c.yellow}) ot its base package in provides of another """\
+               """({c.cyan}{1}{c.yellow}) but both selected to build. """\
+               """Behaviour of this case is undefined, build may fails """\
+               """eventually.""", name, provider.name)
+
 
         package = super(PackageMeta, cls).__call__(name, *args, **kwargs)
         cls._cache[name] = package
         return package
+
+
+    @classmethod
+    def fetch_db(cls):
+        names = [p.name for p in cls._cache.values()]
+        names_query = sum([[i, '='] for i in names], [])
+        stat, data = mpkg_db.getRecords('packages', ['package_name',
+                'package_version', 'package_build', 'package_installed'],
+                        _skyfront_and=False, package_name=names_query)
+        if not stat:
+            raise _e("{c.red}Unexpected result while fetching db: {0}",
+                       ValueError, data)
+
+        for p in data:
+            name, ver, inst = p[0], p[1:3], p[3]
+            pkg = cls._cache.get(name, None)
+            if not pkg:
+                _w('{c.yellow}Selected wrong package{c.cyan}{0}', name)
+                continue
+            if inst:
+                pkg._installed = ver
+            if not hasattr(pkg, '_avaliable_list'):
+                pkg._avaliable_list = []
+            pkg._avaliable_list.append(ver)
+
+
+    @classmethod
+    def vercmp(cls, f, s):
+        result, error = popen('mpkg-vercmp', f[0], s[0])
+        if error:
+            raise OSError(error)
+        if int(result) is 0:
+            result = cmp(f[1], s[1])
+        return int(result)
+
 
 
 class Package(object):
@@ -63,7 +112,7 @@ class Package(object):
         if not hasattr(self, '_abuild'):
             self._abuild = abuild = Abuild(self.name)
             if not abuild:
-                logging.error(_("Abuild for %s not found of contains errors."), self.name)
+                _e("{c.red}Abuild for {0} not found of contains errors.", None, self.name)
             elif abuild.provides:
                 self.__metaclass__._provides[abuild.provides] = self
         return self._abuild
@@ -103,10 +152,16 @@ class Package(object):
     @property
     def avaliable(self):
         if not hasattr(self, '_avaliable'):
-            stat, data = mpkg_db.getRecords('packages',
-                            ['package_version', 'package_build'],
-                            limit=1, package_name=self.name)
-            self._avaliable = data[0] if data else ()
+            if hasattr(self, '_avaliable_list'):
+                vcmp = self.__metaclass__.vercmp
+                self._avaliable = reduce(lambda av, pkg:
+                        av if vcmp(av, pkg) > 0 else pkg,
+                        self._avaliable_list)
+            else:
+                stat, data = mpkg_db.getRecords('packages',
+                                ['package_version', 'package_build'],
+                                limit=1, package_name=self.name)
+                self._avaliable = data[0] if data else ()
         return self._avaliable
 
 
@@ -123,10 +178,10 @@ class Package(object):
         """Check if all deps in build_order"""
         diff = set(self.deps) - set(build_order)
         if not diff:
-            logging.debug(_("ALL DEPS OK: Adding %s\n"), self.name)
+            _d("{c.white}ALL DEPS OK: Adding {c.cyan}{0}", self.name)
             return True
-        logging.debug(_("DEP FAIL: %s => %s"), self.name,
-                ', '.join([d.name for d in diff]))
+        _d("{c.yellow}DEP FAIL: {c.cyan}{0}{c.yellow} => {c.cyan}{1}",
+                self.name, ', '.join([d.name for d in diff]))
         return False
 
 
@@ -134,12 +189,9 @@ class Package(object):
         """Compare version by using of mpkg"""
         if not self.abuild:
             return 1
-        result, error = popen('mpkg-vercmp', self.abuild.pkgver, version)
-        if error:
-            raise OSError(error)
-        if int(result) is 0:
-            result = cmp(self.abuild.pkgbuild, build)
-        return int(result)
+        return self.__metaclass__.vercmp(
+                            (self.abuild.pkgver, self.abuild.pkgbuild),
+                            (version, build))
 
 
     def action(self, force):
@@ -155,3 +207,30 @@ class Package(object):
         elif self.buildable:
             return PKG_STATUS_STR.build
         return PKG_STATUS_STR.missing
+
+
+    def output(self, status):
+        if status == PKG_STATUS_STR.missing:
+            version = ''
+        elif status == PKG_STATUS_STR.install:
+            version = '[{0}-{1}]'.format(*self.avaliable)
+        elif status == PKG_STATUS_STR.keep:
+            version = '[{0}-{1}]'.format(*self.installed)
+        else:
+            vstring = ''
+            if self.installed:
+                vstring = '{0}-{1} -> '.format(*self.installed)
+            version = ''.join(['{c.old_version}', vstring, '{c.version}',
+                        self.abuild.pkgver, '-', self.abuild.pkgbuild])
+
+        depends = ''
+        if self.dep_for:
+            do_dep = getattr(settings, 'PRINT_DEPENDS', False)
+            if do_dep or status == PKG_STATUS_STR.missing:
+                depends = [' <={c.miss_dep}']
+                depends.extend([p.name for p in self.dep_for])
+                depends.append('{c.end}')
+                depends = ' '.join(depends)
+
+        return ''.join([self.name, ' {c.version}', version, '{c.end}',
+                        depends])

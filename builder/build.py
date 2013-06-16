@@ -1,69 +1,42 @@
 # -*- coding: utf-8 -*-
 
-from builder.oset import OrderedSet
-from builder.functions import print_array
-from builder.package import Package, PKG_STATUS_STR, PKG_STATUS_NAMES
-from builder.utils import print_graph, AttrDict
-from builder import settings, config
+from . import settings, config
+from .oset import OrderedSet
+from .adict import AttrDict
+from .package import Package, PKG_STATUS_STR, PKG_STATUS_NAMES
+from .utils import print_graph, print_array
+from .output import ( info as _,
+                      warn as _w,
+                      error as _e )
+
 from math import log10, ceil
-import logging
 import subprocess
 import os
 import sys
 
 
-COLORS = AttrDict(settings.COLORS)
-NO_COLORS = AttrDict([(key, '') for key in COLORS.keys()])
-
-def get_colors():
-    return COLORS if getattr(settings, 'COLORIZE', False) else NO_COLORS
-
-def package_depens(pkg, status, colors):
-    if not pkg.dep_for or (status != PKG_STATUS_STR.missing and \
-        not getattr(settings, 'PRINT_DEPENDS', False)):
-        return ''
-    return ' <= {c.miss_dep}{0}{c.end}'.format(
-            ' '.join([p.name for p in pkg.dep_for]), c=colors)
-
-def package_version(pkg, status, colors):
-    if status == PKG_STATUS_STR.missing:
-        return ''
-    elif status == PKG_STATUS_STR.install:
-        return '[{0}-{1}]'.format(*pkg.avaliable)
-    elif status == PKG_STATUS_STR.keep:
-        return '[{0}-{1}]'.format(*pkg.installed)
-    string = ''
-    if pkg.installed:
-        string = '{0}-{1} -> '.format(*pkg.installed)
-    return '{c.old_version}{0}{c.version}{1}-{2}'.format(string,
-        pkg.abuild.pkgver, pkg.abuild.pkgbuild, c=colors)
-
 
 def print_instructions(packages):
-    colors = get_colors()
-
     for key in PKG_STATUS_NAMES:
         if key not in packages:
             continue
 
         string = []
-        string.append("{c.title}Packages for action {c.bold}{0}{c.end}:".format(
-                    key.upper(), c=colors))
+        string.append("{c.white}Packages for action {c.bold}{0}{c.end}:")
         signs = int(ceil(log10(len(packages[key]))))
-        for n, package in enumerate(packages[key]):
+        for n, package in enumerate(packages[key], 1):
             number = '{0:>{1}}: '.format(n, signs) if config.clopt('numerate') else ''
-            depends = package_depens(package, key, colors)
-            version = package_version(package, key, colors)
-            string.append("{c.title}{3}{c.end}{color}{0.name} {c.version}{1}{c.end}{2}".format(
-              package, version, depends, number, c=colors, color=colors[key]))
-        logging.info('\n'.join(string))
+            string.append("{c.white}" + number + "{c.end}{c." + key + "}" +
+                            package.output(key))
+        _('\n'.join(string), key.upper())
+
     total = 0
-    totalstr = ''
+    totalstr = []
     for k, v in packages.items():
         total += len(v)
-        totalstr += "{0}: {c.bold}{1}{c.end} ".format(k.capitalize(), len(v), c=colors)
-    logging.info('Total: {c.version}{c.bold}{0}{c.end} {1}'.format(
-            total, totalstr, c=colors))
+        totalstr.extend([k.capitalize(), ": {c.bold}", str(len(v)), "{c.end} "])
+    _("Total: {c.version}{c.bold}{0}{c.end} " + ''.join(totalstr), total)
+
 
 
 def get_build_instructions(package_list, origin_package_set):
@@ -94,6 +67,7 @@ def get_build_instructions(package_list, origin_package_set):
 
     return packages
 
+
 def install_packages(install):
     if not install:
         return
@@ -102,44 +76,42 @@ def install_packages(install):
 
 
 def build_packages(build):
-    counter = 0
-    colors = get_colors()
-    total = len(build) + 1
+    total = len(build)
 
-    logging.info("Build started.")
+    _("{c.bold}{c.green}Build started.")
     skip = int(config.clopt('start_from', 0))
     skip_failed = getattr(settings, 'SKIP_FAILED', False)
     mkpkg_opts = '' if getattr(settings, 'NO_INSTALL', False) else '-si'
 
-    for package in build:
-        counter += 1
-        if counter <= skip:
+    for counter, package in enumerate(build):
+        if counter < skip:
             continue
-        s = "[{0}/{1}] {2}: building...".format(counter, total, package)
+        s = "[{0}/{1}] {2}: building...".format(counter+1, total, package)
         sys.stdout.write("\x1b]2;{0}\x07".format(s))
         sys.stdout.flush()
-        logging.info(s)
+        _("{c.green}" + s)
 
         path = os.path.join(settings.ABUILD_PATH, package.name)
         if subprocess.call("cd {0} && mkpkg {1}".format(path, mkpkg_opts), shell=True):
-            logging.info("BUILD FAILED")
+            _w("{c.red}BUILD FAILED")
             if not skip_failed:
-                logging.error("%s failed to build, stopping.", package)
-                logging.info("Successfully built: %s of %s packages.", counter-1, total)
+                _e("{c.red}Package {c.cyan}{0}{c.red} failed to build, stopping.", None, package.name)
+                _("""{c.white}Successfully built: {c.bold}{c.yellow}{0}{c.white}{c.end}"""\
+                  """ of {c.bold}{c.yellow}{1}{c.white}{c.end} packages.""", counter, total)
                 return
         else:
-            logging.info("BUILD OK")
+            _("{c.green}BUILD OK")
+
 
 
 def process_list(package_list, origin_package_set):
     packages = get_build_instructions(package_list, origin_package_set)
     print_instructions(packages)
-    colors = get_colors()
 
     no_deps = [p.name for p in package_list if not p.deps]
     if no_deps and config.clopt('with_deps', False):
-        logging.info("{c.title}Packages without build_deps:{c.end} {c.version}{0}{c.end}".format(
-                        ' '.join(no_deps), c=colors))
+        _w("{c.white}Packages without build_deps:{c.end} {c.yellow}{0}",
+                ' '.join(no_deps))
         return
 
     # Only print
@@ -149,8 +121,9 @@ def process_list(package_list, origin_package_set):
     # Check for missing packages
     if 'missing' in packages:
         if not getattr(settings, 'IGNORE_MISSING', False):
-            logging.error("Errors detected: packages missing: %s",
-                ' '.join(map(lambda x: x.name, packages[PKG_STATUS_STR.missing])))
+            missing = map(lambda x: x.name, packages[PKG_STATUS_STR.missing])
+            _e("{c.red}Errors detected: packages missing: {c.cyan}{0}",
+                None, ' '.join(missing))
             return
 
     # Create graph if requested
@@ -161,12 +134,18 @@ def process_list(package_list, origin_package_set):
         print_graph(package_list, graph, highlight)
         return
 
+    skip = int(config.clopt('start_from', 0))
+    build_order = packages.get(PKG_STATUS_STR.build, [])
+    if skip and skip < len(build_order):
+        _("{c.white}Build will be started from {c.bold}{c.yellow}{0}{c.end}",
+            build_order[skip].name)
+
     if getattr(settings, 'ASK', False):
-        logging.info('{c.bold}{c.title}Are you {c.build}ready to build{c.title} packages?\
- [{c.build}Y{c.title}/{c.missing}n{c.title}]{c.end}'.format(c=colors))
+        _("""{c.bold}{c.white}Are you {c.green}ready to build{c.white}"""\
+          """ packages? [{c.green}Y{c.white}/{c.red}n{c.white}]{c.end}""")
         answer = ''.join(sys.stdin.read(1).splitlines())
         if answer not in ('', 'y', 'Y'):
             return
 
     install_packages(packages.get(PKG_STATUS_STR.install, []))
-    build_packages(packages.get(PKG_STATUS_STR.build, []))
+    build_packages(build_order)

@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
 
-from builder.path import guess_path
-from builder.utils import popen, force_unicode
-from builder import settings
-from builder.utils import gettext as _
+from . import settings
+from .path import guess_path
+from .utils import popen
+from .output import ( info as _,
+                      debug as _d,
+                      error as _e )
+
 import json
-import logging
 import os
 
 
@@ -29,7 +31,7 @@ VER_OPS = {
 
 class AbuildError(Exception):
     pass
-# -*- coding: utf-8 -*-
+
 
 
 class AbuildMeta(type):
@@ -39,7 +41,7 @@ class AbuildMeta(type):
         """Create only core abuilds"""
         path = get_path(pkgname)
         if not os.path.exists(path):
-            logging.debug(_("GET_ERROR: No such file %s"), path)
+            _d("{c.red}GET_ERROR: No such file {c.white}{c.bold}{0}", path)
             return None
 
         if path in cls._cache:
@@ -62,17 +64,24 @@ class Abuild(object):
         self.path = abuild
         data, error = popen("./get_abuild_var.sh", abuild, *ABUILD_VARS)
         if error:
-            text = _(u"Error in abuild {0}:\n{1}").format(name, error.decode("utf-8"))
-            logging.error(text)
-            raise AbuildError(text)
+            raise _e(u"{c.red}Error in abuild {c.yellow}{0}{c.red}:\n{1}",
+                        AbuildError, name, error.decode("utf-8"))
         data = json.loads(data)
         for key, value in data.items():
             if key not in ABUILD_VARS:
-                raise AbuildError(_("Unexpected key {0} in ABUILD {1}. Probably script error.").format(key ,name))
+                raise _e("{c.red}Unexpected key {c.cyan}{0}{c.red} in \
+ABUILD {c.yellow}{1}{c.red}. Probably script error.", AbuildError, key ,name)
             if not value and key in MANDATORY_VARS:
-                raise AbuildError(_("Variable {0} not found in ABUILD {1}").format(key, name))
+                raise _e("{c.red}Variable {c.cyan}{0}{c.red} not found \
+in ABUILD {c.yellow}{1}", AbuildError, key, name)
+
             setattr(self, key, value)
         self.parse_deps()
+
+
+    def pkg_list(pkgname):
+        return self.pkglist.split()
+
 
     def parse_deps(self):
         def _parse(pkgname):
@@ -88,6 +97,7 @@ class Abuild(object):
         self.build_deps_verbose = deps = dict(
                     [_parse(x) for x in deps])
         self.build_deps = deps.keys()
+
 
 
 def get_path(pkgname):

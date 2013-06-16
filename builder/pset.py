@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
 """PackageSet class"""
-from builder.package import Package
-from builder.mset import MergableSet
+from .package import Package
+from .mset import MergableSet
 
 
 class PackageSet(MergableSet):
@@ -30,4 +30,4 @@ class PackageSet(MergableSet):
     def merge(self):
         super(PackageSet, self).merge(
             lambda p: p.name != p.abuild.pkgname,
-            lambda p: Package(p.abuild.pkgname))
+            lambda p: Package(p.abuild.pkgname, claimer=p))
