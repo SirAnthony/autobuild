@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from builder import config
-from builder.buildorder import get_build_order
-from builder.build import process_list
-from builder.pset import PackageSet
-from builder.output import info as _
+from agibuild import config
+from agibuild.buildorder import get_build_order
+from agibuild.build import process_list
+from agibuild.pset import PackageSet
+from agibuild.output import info as _
 import logging
 import sys
 

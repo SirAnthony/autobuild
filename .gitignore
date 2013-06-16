@@ -3,3 +3,9 @@
 *.db
 *.dot
 *.png
+
+# generated stuff
+build/
+mpkg/_support.so
+mpkg/support.py
+mpkg/support_wrap.cpp

@@ -34,10 +34,10 @@ LOG_DEBUG_FORMAT = u'%(asctime)s: %(message)s'
 #LOG_ERROR_FORMAT = LOG_DEBUG_FORMAT
 LOG_PATH = path.join(USER_PATH, 'log')
 LOG_CONFIG = {'version': 1,
-              'formatters': {'error': {'()': 'builder.uformatter.UnicodeFormatter',
+              'formatters': {'error': {'()': 'agibuild.uformatter.UnicodeFormatter',
                                        'format': LOG_ERROR_FORMAT,
                                        'datefmt': LOG_ERROR_DATE},
-                             'debug': {'()': 'builder.uformatter.UnicodeFormatter',
+                             'debug': {'()': 'agibuild.uformatter.UnicodeFormatter',
                                        'format': LOG_DEBUG_FORMAT,
                                        'datefmt': u'[%d %b %I:%M:%S]'}},
               'handlers': {'console': {'class': 'logging.StreamHandler',
@@ -65,7 +65,7 @@ import logging
 try:
     from logging.config import dictConfig
 except ImportError:
-    from builder.dictconfig import dictConfig
+    from .dictconfig import dictConfig
 dictConfig(LOG_CONFIG)
 
 root_logger = logging.getLogger()
