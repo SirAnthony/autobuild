@@ -5,11 +5,11 @@ from .abuild import Abuild, AbuildError
 from .adict import AttrDict
 from .mset import MergableSet
 from .skyfront import SkyFront
-from .utils import popen
 from .output import (info as _,
                      debug as _d,
                      warn as _w,
                      error as _e )
+from mpkg.support import compareVersions
 import os.path
 
 
@@ -73,17 +73,6 @@ class PackageMeta(type):
             if not hasattr(pkg, '_avaliable_list'):
                 pkg._avaliable_list = []
             pkg._avaliable_list.append(ver)
-
-
-    @classmethod
-    def vercmp(cls, f, s):
-        result, error = popen('mpkg-vercmp', f[0], s[0])
-        if error:
-            raise OSError(error)
-        if int(result) is 0:
-            result = cmp(f[1], s[1])
-        return int(result)
-
 
 
 class Package(object):
@@ -153,9 +142,9 @@ class Package(object):
     def avaliable(self):
         if not hasattr(self, '_avaliable'):
             if hasattr(self, '_avaliable_list'):
-                vcmp = self.__metaclass__.vercmp
-                self._avaliable = reduce(lambda av, pkg:
-                        av if vcmp(av, pkg) > 0 else pkg,
+                self._avaliable = reduce(lambda av, pkg: av if \
+                        compareVersions(str(av[0]), str(av[1]),
+                        str(pkg[0]), str(pkg[1])) > 0 else pkg,
                         self._avaliable_list)
             else:
                 stat, data = mpkg_db.getRecords('packages',
@@ -186,12 +175,11 @@ class Package(object):
 
 
     def vercmp(self, version, build):
-        """Compare version by using of mpkg"""
+        """Compare supplied version and build with current abuild version"""
         if not self.abuild:
             return 1
-        return self.__metaclass__.vercmp(
-                            (self.abuild.pkgver, self.abuild.pkgbuild),
-                            (version, build))
+        return compareVersions(str(self.abuild.pkgver), str(self.abuild.pkgbuild),
+                               str(version), str(build))
 
 
     def action(self, force):
