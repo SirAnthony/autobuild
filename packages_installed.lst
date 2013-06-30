@@ -325,9 +325,9 @@ libvorbis
 libvpx
 libwbclient
 libwmf
-libwpd
-libwpg
-libwps
+#libwpd
+#libwpg
+#libwps
 libwww-perl
 libxcb
 libxdg-basedir
@@ -340,6 +340,7 @@ linux-firmware
 linux-pam
 linuxdoc-tools
 logrotate
+love
 lsof
 lua
 lvm2
@@ -513,7 +514,6 @@ skype
 slang
 smartmontools
 smbclient
-smpeg
 soundtouch
 speex
 splintermind-attributes

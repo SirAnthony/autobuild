@@ -1,4 +1,11 @@
+gobject-introspection
+atk
 cairo
-libdrm
-mesa
+gobject-introspection
+harfbuzz
+pango
+gtk+2
+librsvg
 cairo
+pango
+gtk+2

@@ -68,9 +68,6 @@ except ImportError:
     from .dictconfig import dictConfig
 dictConfig(LOG_CONFIG)
 
-root_logger = logging.getLogger()
-root_logger.setLevel(logging.INFO)
-
 # Set hook
 #from builder.utils import excepthook
 #sys.excepthook = excepthook

@@ -17,7 +17,6 @@ def get_combined_check_list(build_order, loop_register_data):
     return ret
 
 
-
 class Resolver(object):
 
     def __init__(self, packages):
@@ -70,7 +69,8 @@ class Resolver(object):
 
         # Remove packages from queue
         for item in loop_set:
-            unprocessed.remove(item)
+            if item in unprocessed:
+                unprocessed.remove(item)
 
         # Re-add packages that were between and depend on loop
         for index in range(stuck_position, merge_position):
@@ -87,22 +87,33 @@ class Resolver(object):
 
     def check_loops(self):
         # Debug check (catches a case when in_queue is calculated incorrectly
-        if not self.unprocessed:
+        build_order = self.build_order
+        unprocessed = self.unprocessed
+        if not unprocessed:
             raise _e("CODE ERROR: Loop detected, but no loop really exist.", ValueError)
 
         # Find a known loop which contains at least one of stucked packages
-        loop_order = loop.loop_for(self.unprocessed, self.loop_register)
+        loop_order = loop.loop_for(unprocessed, self.loop_register)
 
         if not loop_order:
-            print_array(loop_order, logging.debug)
-            raise _("Unresolvable loop detected, fix known loops and try again", ValueError)
+            print_array(loop_order, _d)
+            raise _e("Unresolvable loop detected, fix known loops and try again", ValueError)
 
         # Throw error if loop is invalid
         loop_order.check_valid(self.packages)
 
+        # Add loop deps
+        order_set = PackageSet(loop_order)
+        deps = filter(lambda x: x not in build_order and \
+                                x not in unprocessed and \
+                                x not in loop_order,
+                                order_set.get_dep_tree())
+        self.unprocessed.extend(deps)
+
         loop_order.position = len(self.build_order)
         self.loop_register.append(loop_order)
-        _d("Registering loop: {0}", self.loop_register)
+        _d("Registering loop: {0}. Total loops count: {1}", loop_order,
+            len(self.loop_register))
 
 
     def advance_loops(self):
@@ -129,8 +140,9 @@ If success, package is added to build_order
 
         def add_package(package):
             if package in check_array or \
-                    not package.enqueue(check_array):
+                    not package.enqueue(build_order, self.loop_register):
                 return 0
+            _d("{c.green}ADDING: {c.cyan}{0}", package.name)
             unprocessed.remove(package)
             check_array.add(package)
             build_order.append(package)

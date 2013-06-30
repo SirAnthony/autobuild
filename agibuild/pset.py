@@ -29,5 +29,5 @@ class PackageSet(MergableSet):
 
     def merge(self):
         super(PackageSet, self).merge(
-            lambda p: p.name != p.abuild.pkgname,
+            lambda p: p.abuild and p.name != p.abuild.pkgname,
             lambda p: Package(p.abuild.pkgname, claimer=p))

@@ -14,7 +14,7 @@ import os.path
 
 
 
-PKG_STATUS_NAMES = ('install', 'build', 'missing', 'keep')
+PKG_STATUS_NAMES = ('build', 'keep', 'install', 'missing')
 PKG_STATUS = AttrDict([(name, n) for n, name in enumerate(PKG_STATUS_NAMES)])
 PKG_STATUS_STR = AttrDict([(name, name) for name in PKG_STATUS_NAMES])
 
@@ -34,8 +34,11 @@ class PackageMeta(type):
 
         if name in cls._cache:
             return cls._cache[name]
-        # No alternatives
-        if name in cls._provides:
+
+        package = super(PackageMeta, cls).__call__(name, *args, **kwargs)
+
+        # Have alternatives
+        if not package.get_abuild(False) and name in cls._provides:
             provider = cls._provides[name]
             if not claimer or claimer.name == name:
                 return provider
@@ -46,13 +49,26 @@ class PackageMeta(type):
                """eventually.""", name, provider.name)
 
 
-        package = super(PackageMeta, cls).__call__(name, *args, **kwargs)
+
         cls._cache[name] = package
         return package
 
 
     @classmethod
-    def fetch_db(cls):
+    def fetch_provides(cls):
+        stat, data = mpkg_db.getRecords('packages', ['package_name'],
+                         package_provides=['', 'IS NOT'])
+        if not stat:
+            raise _e("{c.red}Unexpected result while fetching db: {0}",
+                       ValueError, data)
+
+        # Just toch it, abuild call will do all things.
+        for p in map(lambda x: x[0], data):
+            Package(p).get_abuild(False)
+
+
+    @classmethod
+    def fetch_versions(cls):
         names = [p.name for p in cls._cache.values()]
         names_query = sum([[i, '='] for i in names], [])
         stat, data = mpkg_db.getRecords('packages', ['package_name',
@@ -73,6 +89,8 @@ class PackageMeta(type):
             if not hasattr(pkg, '_avaliable_list'):
                 pkg._avaliable_list = []
             pkg._avaliable_list.append(ver)
+
+
 
 
 class Package(object):
@@ -96,15 +114,17 @@ class Package(object):
         return self.__unicode__()
 
 
-    @property
-    def abuild(self):
+    def get_abuild(self, signalize=True):
         if not hasattr(self, '_abuild'):
             self._abuild = abuild = Abuild(self.name)
             if not abuild:
-                _e("{c.red}Abuild for {0} not found of contains errors.", None, self.name)
+                if signalize:
+                    _e("{c.red}Abuild for {0} not found of contains errors.",
+                        None, self.name)
             elif abuild.provides:
                 self.__metaclass__._provides[abuild.provides] = self
         return self._abuild
+    abuild = property(get_abuild)
 
     @property
     def base(self):
@@ -163,11 +183,14 @@ class Package(object):
         return self.abuild_exist
 
 
-    def enqueue(self, build_order):
+    def enqueue(self, build_order, loops=[]):
         """Check if all deps in build_order"""
-        diff = set(self.deps) - set(build_order)
+        # Check if needed for loop
+        self_loops = filter(lambda x: x in self.in_loop, loops)
+        loop_packages = [item for s in self_loops for item in s]
+        diff = set(self.deps) - set(build_order + loop_packages)
         if not diff:
-            _d("{c.white}ALL DEPS OK: Adding {c.cyan}{0}", self.name)
+            _d("{c.white}ALL DEPS OK: {c.cyan}{0}{c.white} is ready", self.name)
             return True
         _d("{c.yellow}DEP FAIL: {c.cyan}{0}{c.yellow} => {c.cyan}{1}",
                 self.name, ', '.join([d.name for d in diff]))

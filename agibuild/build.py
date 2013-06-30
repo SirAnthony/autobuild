@@ -17,8 +17,12 @@ import sys
 
 
 def print_instructions(packages):
+    print_keep = config.clopt('build_keep') or config.clopt('show_keep')
     for key in PKG_STATUS_NAMES:
         if key not in packages:
+            continue
+
+        if key == PKG_STATUS_STR.keep and not print_keep:
             continue
 
         string = []

@@ -4,7 +4,7 @@ import os, getopt, sys
 import json
 from . import settings
 from . import options
-from .output import error as _e
+from .output import set_level, error as _e
 import re
 
 
@@ -38,8 +38,13 @@ def options_parse(prog, version, argv):
 
     processed = {}
     for o, a in opts:
+        if not o:
+            continue
+
         if o in ('-h', '--help'):
             usage(prog)
+        elif o == '--debug':
+            set_level('debug')
 
         name, opt = options.SHORT.get(o,
                     options.LONG.get(o, (None, None)))

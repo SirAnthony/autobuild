@@ -52,6 +52,13 @@ COLORS = AttrDict(BASE_COLORS.items() + BASE_FORMATTING.items() + EXTENDED_COLOR
 NO_COLORS = AttrDict([(key, '') for key in COLORS.keys()])
 
 
+def set_level(l):
+    level = logging.INFO
+    if l == 'debug':
+        level = logging.DEBUG
+    root_logger = logging.getLogger()
+    root_logger.setLevel(level)
+
 
 def force_unicode(s, encoding='utf-8', strings_only=False, errors='strict'):
     if isinstance(s, unicode):
@@ -116,3 +123,6 @@ def error(text, e=None, *args, **kwargs):
     resolved = resolve(text, *args, **kwargs)
     logging.error(resolved)
     return e(resolved) if e else None
+
+
+set_level('')

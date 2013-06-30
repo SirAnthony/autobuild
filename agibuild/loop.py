@@ -36,7 +36,7 @@ class Loop(list):
 
     def check_valid(self, packages):
         for item in self:
-            if item not in packages:
+            if item not in packages and not item.abuild:
                 _e("""{c.red}Package {c.yellow}{0}{c.red} was """\
                    """specified in loop but was not found. Aborting.""",
                    None, item.name)
