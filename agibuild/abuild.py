@@ -14,7 +14,7 @@ import os
 DEFAULT_PATH = ""
 
 MANDATORY_VARS = ['pkgname', 'pkgver', 'pkgbuild']
-OPTIONAL_VARS = ['build_deps', 'provides', 'conflicts']
+OPTIONAL_VARS = ['build_deps', 'adddep', 'provides', 'conflicts']
 ABUILD_VARS = MANDATORY_VARS + OPTIONAL_VARS
 
 
@@ -92,11 +92,13 @@ in ABUILD {c.yellow}{1}", AbuildError, key, name)
                     break
             return (name, (op, ver))
 
-
         deps = self.build_deps.split()
-        self.build_deps_verbose = deps = dict(
-                    [_parse(x) for x in deps])
+        self.build_deps_verbose = deps = dict([_parse(x) for x in deps])
         self.build_deps = deps.keys()
+
+        adeps = self.adddep.split()
+        self.adddep_verbose = adeps = dict([_parse(x) for x in adeps])
+        self.adddep = adeps.keys()
 
 
 

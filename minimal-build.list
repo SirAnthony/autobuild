@@ -119,6 +119,7 @@ libjpeg-turbo
 libmcrypt
 libmpc
 libpng
+libsigsegv
 libssh2
 libtasn1
 libtirpc

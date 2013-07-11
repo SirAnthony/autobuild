@@ -46,7 +46,7 @@ def print_instructions(packages):
 def get_build_instructions(package_list, origin_package_set):
     # Place packages according to it's action types
     packages = {}
-    norebuild = getattr(settings, 'NO_REBUILD_INSTALLED', False)
+    norebuild = settings.opt('no_rebuild_installed')
     build_keep = config.clopt('build_keep')
     for package in package_list:
         action = package.action(origin_package_set)
@@ -84,8 +84,8 @@ def build_packages(build):
 
     _("{c.bold}{c.green}Build started.")
     skip = int(config.clopt('start_from', 0))
-    skip_failed = getattr(settings, 'SKIP_FAILED', False)
-    mkpkg_opts = '' if getattr(settings, 'NO_INSTALL', False) else '-si'
+    skip_failed = settings.opt('skip_failed')
+    mkpkg_opts = '' if settings.opt('no_install') else '-si'
 
     for counter, package in enumerate(build):
         if counter < skip:
@@ -123,12 +123,11 @@ def process_list(package_list, origin_package_set):
         return
 
     # Check for missing packages
-    if 'missing' in packages:
-        if not getattr(settings, 'IGNORE_MISSING', False):
-            missing = map(lambda x: x.name, packages[PKG_STATUS_STR.missing])
-            _e("{c.red}Errors detected: packages missing: {c.cyan}{0}",
-                None, ' '.join(missing))
-            return
+    if 'missing' in packages and not settings.opt('ignore_missing'):
+        missing = map(lambda x: x.name, packages[PKG_STATUS_STR.missing])
+        _e("{c.red}Errors detected: packages missing: {c.cyan}{0}",
+            None, ' '.join(missing))
+        return
 
     # Create graph if requested
     graph = config.clopt('graph_path', None)
@@ -144,7 +143,7 @@ def process_list(package_list, origin_package_set):
         _("{c.white}Build will be started from {c.bold}{c.yellow}{0}{c.end}",
             build_order[skip].name)
 
-    if getattr(settings, 'ASK', False):
+    if settings.opt('ask'):
         _("""{c.bold}{c.white}Are you {c.green}ready to build{c.white}"""\
           """ packages? [{c.green}Y{c.white}/{c.red}n{c.white}]{c.end}""")
         answer = ''.join(sys.stdin.read(1).splitlines())

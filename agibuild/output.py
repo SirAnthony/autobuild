@@ -93,7 +93,7 @@ def resolve(text, *args, **kwargs):
     # Allways close formatting
     text += '{c.end}{c.default}'
     colors = NO_COLORS
-    if not getattr(settings, 'NO_COLOR', False):
+    if not settings.opt('no_color'):
         colors = COLORS
     return text.format(*args, c=colors, **kwargs)
 

@@ -60,6 +60,14 @@ NUMERATE = False
 if not path.exists(USER_PATH):
     makedirs(USER_PATH)
 
+
+def opt(var, default=False):
+    try:
+        return globals()[var.upper()]
+    except KeyError:
+        return default
+
+
 # Load logging
 import logging
 try:

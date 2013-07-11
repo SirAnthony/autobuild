@@ -11,7 +11,7 @@ import sys
 
 
 if __name__ == '__main__':
-    _("Loading abuilds, this can take a time...")
+    _("{c.yellow}Loading abuilds, this can take a time...")
     package_set = PackageSet(config.package_list)
     build_order = get_build_order(package_set)
     process_list(build_order, package_set)

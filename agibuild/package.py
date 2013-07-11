@@ -90,7 +90,20 @@ class PackageMeta(type):
                 pkg._avaliable_list = []
             pkg._avaliable_list.append(ver)
 
-
+    @classmethod
+    def fetch_dependencies(cls):
+        stat, data = mpkg_db.getRecords('dependencies', [
+            'dependency_package_name', 'package_name'],
+            'LEFT OUTER JOIN `packages` on `package_id` = `packages_package_id`',
+            package_installed=1)
+        if not stat:
+            raise _e("{c.red}Unexpected result while fetching db: {0}",
+                       ValueError, data)
+        for pkgname, depname in data:
+            package = Package(pkgname)
+            if not hasattr(package, '_dependants'):
+                package._dependants = set()
+            package._dependants.add(Package(depname))
 
 
 class Package(object):
@@ -112,7 +125,6 @@ class Package(object):
         return unicode(self.__str__())
     def __repr__(self):
         return self.__unicode__()
-
 
     def get_abuild(self, signalize=True):
         if not hasattr(self, '_abuild'):
@@ -148,6 +160,22 @@ class Package(object):
             for dep in self._deps:
                 dep.dep_for.add(self)
         return self._deps
+
+    @property
+    def installdeps(self):
+        if not self.abuild_exist:
+            return frozenset()
+        if not hasattr(self, '_install_deps'):
+            self._install_deps = MergableSet(map(lambda p: Package(p),
+                filter(lambda n: n and n not in settings.BLACKLIST_PACKAGES,
+                self.abuild.adddep)))
+            self._install_deps.merge(lambda p: p.abuild and p.name != p.abuild.pkgname,
+                             lambda p: Package(p.abuild.pkgname))
+        return self._install_deps
+
+    @property
+    def dependants(self):
+        return getattr(self, '_dependants', frozenset())
 
     @property
     def installed(self):

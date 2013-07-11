@@ -374,7 +374,6 @@ mod_wsgi
 module-init-tools
 mozilla-firefox
 mpfr
-mpg321
 mpkg-console
 mpkg-core
 mpkg-i18n
@@ -438,8 +437,8 @@ perl-libintl
 perl-pango
 perl-uri
 perl-xml-parser
-php
-phpmyadmin
+#php
+#phpmyadmin
 pidgin
 pil
 pixman
@@ -619,6 +618,7 @@ xproxymanagementprotocol
 xrandr
 xrdb
 xsane
+xset
 xterm
 xulrunner
 xulrunner-devel

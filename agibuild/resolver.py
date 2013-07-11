@@ -41,7 +41,7 @@ class Resolver(object):
 
 
     def log_step(self, part):
-        _("""{c.white}Step {c.bold}{c.yellow}{0}{c.end}{c.white}/part """\
+        _d("""{c.white}Step {c.bold}{c.yellow}{0}{c.end}{c.white}/part """\
           """{c.bold}{c.yellow}{1}{c.end}, in queue: {c.cyan}{2}{c.white}"""\
           """ packages, enqueued: {c.green}{3}{c.white}.""",
             self.step, part, len(self.unprocessed), len(self.build_order))
