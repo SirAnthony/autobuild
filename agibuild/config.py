@@ -61,9 +61,9 @@ def extend_settings(args):
     config_path = args.get('config_path') or default_opts.get('config_path') \
                     or settings.CONFIG_PATH
 
-    for file in settings.MAIN_CONFIG_PATH, config_path:
+    for filename in (settings.MAIN_CONFIG_PATH, config_path):
         try:
-            with file(config_path, 'rU') as stream:
+            with file(filename, 'rU') as stream:
                 config_dict.update(json.load(stream))
         except:
             pass
