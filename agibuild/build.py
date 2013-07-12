@@ -95,7 +95,7 @@ def build_packages(build):
         sys.stdout.flush()
         _("{c.green}" + s)
 
-        path = os.path.join(settings.ABUILD_PATH, package.name)
+        path = package.abuild.location
         if subprocess.call("cd {0} && mkpkg {1}".format(path, mkpkg_opts), shell=True):
             _w("{c.red}BUILD FAILED")
             if not skip_failed:

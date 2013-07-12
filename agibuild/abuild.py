@@ -39,7 +39,8 @@ class AbuildMeta(type):
 
     def __call__(cls, pkgname, *args, **kwargs):
         """Create only core abuilds"""
-        path = get_path(pkgname)
+        abuild_dir = get_path(pkgname)
+        path = os.path.join(abuild_dir, 'ABUILD')
         if not os.path.exists(path):
             _d("{c.red}GET_ERROR: No such file {c.white}{c.bold}{0}", path)
             return None
@@ -54,15 +55,17 @@ class AbuildMeta(type):
             return Abuild(name)
 
         cls._cache[path] = abuild = super(AbuildMeta, cls).__call__(
-                                            name, path, *args, **kwargs)
+                                            name, path, abuild_dir,
+                                            *args, **kwargs)
         return abuild
 
 
 class Abuild(object):
     __metaclass__ = AbuildMeta
 
-    def __init__(self, name, abuild):
+    def __init__(self, name, abuild, abuild_dir):
         self.path = abuild
+        self.location = abuild_dir
         script = os.path.join(settings.SCRIPT_PATH, "get_abuild_var.sh")
         data, error = popen(script, abuild, *ABUILD_VARS)
         if error:
@@ -108,7 +111,7 @@ def get_path(pkgname):
     global DEFAULT_PATH
     if not DEFAULT_PATH:
         DEFAULT_PATH = guess_path(settings.ABUILD_PATH)
-    return os.path.join(DEFAULT_PATH.localpath, pkgname, 'ABUILD')
+    return os.path.join(DEFAULT_PATH.localpath, pkgname)
 
 
 

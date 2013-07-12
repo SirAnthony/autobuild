@@ -3,6 +3,7 @@
 from . import settings
 from .output import error as _e
 from urlparse import urlsplit
+import subprocess
 import os
 import re
 
@@ -57,10 +58,10 @@ class GitPath(Path):
         """Check if directory is git and sync ith with pull, or clone it otherwise"""
         if os.path.exists(target):
             with cd(target):
-                if is_git():
+                if self.is_git():
                     return subprocess.call('git pull', shell=True)
         return subprocess.call('git clone --depth=1 {0} {1}'.format(
-                            url, target), shell=True)
+                            base, target), shell=True)
 
     @staticmethod
     def is_git():

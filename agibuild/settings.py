@@ -24,6 +24,7 @@ USER_PATH = path.join(check_var('$XDG_CONFIG_HOME') or
 PACKAGE_PATH = path.abspath(path.dirname(__file__))
 
 # Path to the configuration file
+MAIN_CONFIG_PATH = '/etc/agibuild.conf'
 CONFIG_PATH = path.join(USER_PATH, 'config')
 LOOPS_PATH = path.join(PACKAGE_PATH, '..', 'loops')
 

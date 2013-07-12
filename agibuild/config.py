@@ -61,11 +61,12 @@ def extend_settings(args):
     config_path = args.get('config_path') or default_opts.get('config_path') \
                     or settings.CONFIG_PATH
 
-    try:
-        with file(config_path, 'rU') as stream:
-            config_dict = json.load(stream)
-    except:
-        pass
+    for file in settings.MAIN_CONFIG_PATH, config_path:
+        try:
+            with file(config_path, 'rU') as stream:
+                config_dict.update(json.load(stream))
+        except:
+            pass
 
     if 'config_path' in config_dict:
         _e('Cannot rewrite config path in config file')
