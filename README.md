@@ -29,7 +29,8 @@ Prints build order for specified packages. Mostly for debugging.
 
 Build packages list using abuilds at build_source
 
-* `./agibuild.py -pudika build_source <packages_list>`
+* `./agibuild.py -pudika <packages_list>`
+
 Typical usage for serious mantainer. Build almost everything: all dependencies and dependand packages for packages in list.
 
 TODO
