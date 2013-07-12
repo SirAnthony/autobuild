@@ -32,7 +32,7 @@ setup(
     description = ("AgiliaLinux package builder"),
     license = "MIT",
     keywords = "agilia package",
-    url = "http://packages.python.org/an_example_pypi_project",
+    url = "",
     packages=['agibuild',],
     ext_package = 'mpkg',
     ext_modules = [module_mpkg],

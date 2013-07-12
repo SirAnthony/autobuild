@@ -47,7 +47,8 @@ class AbuildMeta(type):
         if path in cls._cache:
             return cls._cache[path]
 
-        data, error = popen("./get_corepackage.sh", path)
+        script = os.path.join(settings.SCRIPT_PATH, "get_corepackage.sh")
+        data, error = popen(script, path)
         name = ''.join(data.strip().splitlines()) or pkgname
         if name != pkgname:
             return Abuild(name)
@@ -62,7 +63,8 @@ class Abuild(object):
 
     def __init__(self, name, abuild):
         self.path = abuild
-        data, error = popen("./get_abuild_var.sh", abuild, *ABUILD_VARS)
+        script = os.path.join(settings.SCRIPT_PATH, "get_abuild_var.sh")
+        data, error = popen(script, abuild, *ABUILD_VARS)
         if error:
             raise _e(u"{c.red}Error in abuild {c.yellow}{0}{c.red}:\n{1}",
                         AbuildError, name, error.decode("utf-8"))

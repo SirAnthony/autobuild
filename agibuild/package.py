@@ -91,11 +91,13 @@ class PackageMeta(type):
             pkg._avaliable_list.append(ver)
 
     @classmethod
-    def fetch_dependencies(cls):
+    def fetch_dependencies(cls, pkgset):
+        names = [p.name for p in pkgset]
+        names_query = sum([[i, '='] for i in names], [])
         stat, data = mpkg_db.getRecords('dependencies', [
             'dependency_package_name', 'package_name'],
             'LEFT OUTER JOIN `packages` on `package_id` = `packages_package_id`',
-            package_installed=1)
+            package_installed=1, dependency_package_name=[names_query, 'OR'])
         if not stat:
             raise _e("{c.red}Unexpected result while fetching db: {0}",
                        ValueError, data)

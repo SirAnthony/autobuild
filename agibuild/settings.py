@@ -6,7 +6,7 @@ from os import path, makedirs
 import sys
 
 # Current version string
-VERSION = '0.1'
+VERSION = '0.2'
 
 def check_var(var):
     expanded = path.expandvars(var)
@@ -55,6 +55,7 @@ BLACKLIST_LOOPS = ['.', '..']
 
 ABUILD_PATH = path.join(HOME_PATH, 'abuilds')
 GIT_CACHE_DIR = "/tmp/agibuild/git"
+SCRIPT_PATH = "./scripts/"
 NUMERATE = False
 
 if not path.exists(USER_PATH):
