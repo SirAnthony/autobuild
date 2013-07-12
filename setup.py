@@ -26,7 +26,7 @@ module_mpkg = Extension('_support',
 
 setup(
     name = "agibuild",
-    version = "0.3.0",
+    version = "0.3",
     author = "Sir Anthony",
     author_email = "anthony@adsorbtion.org",
     description = ("AgiliaLinux package builder"),
