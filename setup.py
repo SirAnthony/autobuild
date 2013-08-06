@@ -1,6 +1,6 @@
 import os
 from setuptools import setup, Extension
-from .agibuild.settings import VERSION
+from agibuild.settings import VERSION
 
 
 # Utility function to read the README file.
@@ -20,7 +20,7 @@ module_mpkg = Extension('_support',
 
 setup(
     name = "agibuild",
-    version = settings.VERSION,
+    version = VERSION,
     author = "Sir Anthony",
     author_email = "anthony@adsorbtion.org",
     description = ("AgiliaLinux package builder"),
