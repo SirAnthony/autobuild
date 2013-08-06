@@ -212,6 +212,11 @@ class Package(object):
     def buildable(self):
         return self.abuild_exist
 
+    @property
+    def updatable(self):
+        if not hasattr(self, '_updatable'):
+            self._updatable = self.vercmp(*self.installed)
+        return self._updatable > 0
 
     def enqueue(self, build_order, loops=[]):
         """Check if all deps in build_order"""
@@ -230,17 +235,19 @@ class Package(object):
     def vercmp(self, version, build):
         """Compare supplied version and build with current abuild version"""
         if not self.abuild:
-            return 1
+            return -1
         return compareVersions(str(self.abuild.pkgver), str(self.abuild.pkgbuild),
                                str(version), str(build))
 
 
     def action(self, force):
+        #if self.name == "bluez-firmware":
+        #    import pudb; pudb.set_trace()
         if self in force:
             if self.buildable:
                 return PKG_STATUS_STR.build
         elif self.installed:
-            if config.clopt('update') and self.vercmp(*self.installed) > 0:
+            if config.clopt('update') and self.updatable:
                 return PKG_STATUS_STR.build
             return PKG_STATUS_STR.keep
         elif self.avaliable and not config.clopt('skip_install'):
@@ -251,18 +258,22 @@ class Package(object):
 
 
     def output(self, status):
-        if status == PKG_STATUS_STR.missing:
+        if status == PKG_STATUS_STR.missing or config.clopt('list_order'):
             version = ''
         elif status == PKG_STATUS_STR.install:
             version = '[{0}-{1}]'.format(*self.avaliable)
         elif status == PKG_STATUS_STR.keep:
             version = '[{0}-{1}]'.format(*self.installed)
         else:
-            vstring = ''
+            ovstr = ''
+            vstr = '{0}-{1}'.format(self.abuild.pkgver, self.abuild.pkgbuild)
             if self.installed:
-                vstring = '{0}-{1} -> '.format(*self.installed)
-            version = ''.join(['{c.old_version}', vstring, '{c.version}',
-                        self.abuild.pkgver, '-', self.abuild.pkgbuild])
+                if self.updatable:
+                    ovstr = '{0}-{1} -> '.format(*self.installed)
+                else:
+                    ovstr = '[{c.version}' + vstr + '{c.old_version}]'
+                    vstr = ''
+            version = ''.join(['{c.old_version}', ovstr, '{c.version}', vstr])
 
         depends = ''
         if self.dep_for:

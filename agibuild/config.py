@@ -8,16 +8,7 @@ from .output import set_level, error as _e
 import re
 
 
-def usage(name):
-    try:
-        options.usage(name)
-    except:
-        pass
-    sys.exit(2)
-
-
-
-def options_parse(prog, version, argv):
+def options_parse(argv):
     """
     Return options found in argv.
     prog will be to usage() when --help is requested.
@@ -31,10 +22,7 @@ def options_parse(prog, version, argv):
                                          options.GETOPT_LONG)
     except getopt.GetoptError, err:
         _e(err)
-        usage(prog)
-
-    if not args:
-        usage(prog)
+        options.usage(settings.PROG_NAME)
 
     processed = {}
     for o, a in opts:
@@ -42,14 +30,18 @@ def options_parse(prog, version, argv):
             continue
 
         if o in ('-h', '--help'):
-            usage(prog)
+            options.usage(settings.PROG_NAME)
         elif o == '--debug':
             set_level('debug')
+        elif o == '--version':
+            print settings.VERSION
+            sys.exit(2)
 
         name, opt = options.SHORT.get(o,
                     options.LONG.get(o, (None, None)))
         tgt = CL_OPTS if name in options.CL else processed
         tgt[name] = a if opt else True
+
     return processed, args
 
 
@@ -67,6 +59,7 @@ def extend_settings(args):
                 config_dict.update(json.load(stream))
         except:
             pass
+
 
     if 'config_path' in config_dict:
         _e('Cannot rewrite config path in config file')
@@ -100,8 +93,7 @@ default_opts = {
 
 CL_OPTS = {}
 
-run_opts, run_args = options_parse(os.path.basename(sys.argv[0]),
-                            settings.VERSION, sys.argv[1:])
+run_opts, run_args = options_parse(sys.argv[1:])
 extend_settings(run_opts)
 package_list = parse_input(run_args)
 

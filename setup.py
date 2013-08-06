@@ -1,12 +1,6 @@
 import os
 from setuptools import setup, Extension
-
-# Reorder commands for swig
-#from setuptools.command.build import build
-#build.sub_commands = [('build_ext', build.has_ext_modules),
-#                     ('build_py', build.has_pure_modules),
-#                     ('build_clib', build.has_c_libraries),
-#                     ('build_scripts', build.has_scripts)]
+from .agibuild.settings import VERSION
 
 
 # Utility function to read the README file.
@@ -26,7 +20,7 @@ module_mpkg = Extension('_support',
 
 setup(
     name = "agibuild",
-    version = "0.3",
+    version = settings.VERSION,
     author = "Sir Anthony",
     author_email = "anthony@adsorbtion.org",
     description = ("AgiliaLinux package builder"),

@@ -6,7 +6,8 @@ from os import path, makedirs
 import sys
 
 # Current version string
-VERSION = '0.2'
+VERSION = '0.3.2'
+PROG_NAME = path.basename(sys.argv[0])
 
 def check_var(var):
     expanded = path.expandvars(var)

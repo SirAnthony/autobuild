@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+import sys
+
 """Options module
 This module holds all options program have
 Options format:
@@ -18,6 +20,7 @@ Usage:  [{0}] filename
 """.format(GETOPT_SHORT)
     for item in OPTIONS:
         print "\t-{0} --{1}\t\t{2}".format(*item)
+    sys.exit(2)
 
 def opt(name, mod, char):
     return '{0}{1}'.format(name, '' if not mod else char)

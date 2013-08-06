@@ -3,12 +3,12 @@
 import cStringIO
 import traceback
 import subprocess
+import sys
 from . import config
+from .options import usage as opthelp
 from .output import ( info as _,
                       debug as _d,
                       error as _e )
-
-
 
 def excepthook(excType, excValue, tracebackobj):
     """
