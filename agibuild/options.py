@@ -41,10 +41,11 @@ All preceding packages will be skipped', 'start_from', 1),
         'build_deps', 0),
     ('p', 'with-deps-only', 'Stop if packages has no deps', 'with_deps', 0),
     ('u', 'update', 'Update installed packages.', 'update', 0),
+    ('U', 'enable-vcs', 'Enable treating vcs as updates.', 'enable_vcs', 0),
     ('k', 'build-keep', 'Rebuild packages which will be keep.', 'build_keep', 0),
     ('K', 'show-keep', 'Show packages which will be keep.', 'show_keep', 0),
     ('i', 'skip-install', 'Does not install anything before build.', 'skip_install', 0),
-    ('v', 'debug', 'Print debug information.', 'debug', 0)
+    ('v', 'debug', 'Print debug information.', 'debug', 0),
 )
 
 SETTINGS_OPTS = (

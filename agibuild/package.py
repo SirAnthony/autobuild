@@ -236,6 +236,9 @@ class Package(object):
         """Compare supplied version and build with current abuild version"""
         if not self.abuild:
             return -1
+        if not config.clopt('enable_vcs'):
+            for vcs in ('cvs', 'svn', 'git', 'hg'):
+                version = version.split('_' + vcs)[0]
         return compareVersions(str(self.abuild.pkgver), str(self.abuild.pkgbuild),
                                str(version), str(build))
 
