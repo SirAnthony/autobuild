@@ -45,10 +45,7 @@ def options_parse(argv):
     return processed, args
 
 
-def extend_settings(args):
-    if not args:
-        return
-
+def extend_settings(args={}):
     config_dict = {}
     config_path = args.get('config_path') or default_opts.get('config_path') \
                     or settings.CONFIG_PATH
