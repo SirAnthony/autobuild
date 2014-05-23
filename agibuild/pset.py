@@ -42,14 +42,17 @@ class PackageSet(MergableSet):
             lambda p: Package(p.abuild.pkgname, claimer=p))
 
     def updates(self):
+        """Returns new package set with packages from current that
+           must be updated"""
         return PackageSet(filter(lambda x: x.updatable, self))
 
-
-def get_installed():
-    stat, data = mpkg_db.getRecords('packages', ['package_name'],
-                    package_installed=1)
-    if not stat:
-        raise _e("{c.red}Unexpected result while fetching db: {0}",
+    @staticmethod
+    def installed():
+        """Returns new package set with currently installed packages."""
+        stat, data = mpkg_db.getRecords('packages', ['package_name'],
+                        package_installed=1)
+        if not stat:
+            raise _e("{c.red}Unexpected result while fetching db: {0}",
                        ValueError, data)
-    data = sum(data, ())
-    return PackageSet(data)
+        return PackageSet(sum(data, ()))
+

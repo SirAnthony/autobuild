@@ -244,8 +244,6 @@ class Package(object):
 
 
     def action(self, force):
-        #if self.name == "bluez-firmware":
-        #    import pudb; pudb.set_trace()
         if self in force:
             if self.buildable:
                 return PKG_STATUS_STR.build
