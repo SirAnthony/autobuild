@@ -6,9 +6,8 @@ import subprocess
 import sys
 from . import config
 from .options import usage as opthelp
-from .output import ( info as _,
-                      debug as _d,
-                      error as _e )
+from .output import (info as _, debug as _d, error as _e)
+
 
 def excepthook(excType, excValue, tracebackobj):
     """
@@ -31,34 +30,32 @@ def excepthook(excType, excValue, tracebackobj):
     _e(msg)
 
 
-
 def popen(*args):
-    process = subprocess.Popen(args,
-        stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    process = subprocess.Popen(args, stdout=subprocess.PIPE,
+                               stderr=subprocess.PIPE)
     return process.communicate()
 
 
 def print_graph(packages, fname, highlight=[]):
     data = ["digraph G {"]
-    data.extend(['\t"{0}" [fontcolor = red, color = red];'.format(p.name) \
-            for p in highlight])
+    data.extend(['\t"{0}" [fontcolor = red, color = red];'.format(p.name)
+                for p in highlight])
     for package in packages:
-        data.extend(['\t"{1}" -> "{0}";'.format(d.name, package.name) \
-                        for d in package.deps])
+        data.extend(['\t"{1}" -> "{0}";'.format(d.name, package.name)
+                    for d in package.deps])
     data.append("}")
     data = '\n'.join(data)
     with open('{0}.dot'.format(fname), 'w') as f:
         f.write(data)
     try:
         if subprocess.call(["dot -Tpng -O {0}.dot".format(fname)]):
-            _("""{c.green}File created but was not plotted."""\
+            _("""{c.green}File created but was not plotted."""
               """Plot it with {c.white}dot -O{0}.dot""", fname)
         else:
             _("{c.green}Graph was plotted at {c.magnetta}{0}.png", fname)
     except OSError:
         pass
     return
-
 
 
 def print_array(array, log_callback):
@@ -69,24 +66,21 @@ def print_array(array, log_callback):
     numerate = config.clopt('numerate')
 
     array = ["{0}{1}".format(
-        '[{0}] '.format(number) if numerate else '', item) \
-            for number, item in enumerate(array)]
+             '[{0}] '.format(number) if numerate else '', item)
+             for number, item in enumerate(array)]
     log_callback('\n'.join(array))
 
 
-
 def unique(seq, idfun=None):
-   # order preserving
-   if idfun is None:
-       def idfun(x): return x
-   seen = {}
-   result = []
-   for item in seq:
-       marker = idfun(item)
-       # in old Python versions:
-       # if seen.has_key(marker)
-       # but in new ones:
-       if marker in seen: continue
-       seen[marker] = 1
-       result.append(item)
-   return result
+    # order preserving
+    if idfun is None:
+        idfun = lambda x: x
+    seen = {}
+    result = []
+    for item in seq:
+        marker = idfun(item)
+        if marker in seen:
+            continue
+        seen[marker] = 1
+        result.append(item)
+    return result

@@ -13,12 +13,14 @@ import sys
 
 
 if __name__ == '__main__':
-    _("{c.yellow}Loading abuilds, this can take a time...")
+    _("{c.yellow}Loading abuilds, this can take time...")
     package_set = PackageSet(config.package_list)
-    if not package_set and config.clopt('update'):
-        package_set = PackageSet.installed().updates()
+    if not package_set and config.bare_opts():
+        package_set = PackageSet.installed()
     if not package_set:
         usage(settings.PROG_NAME)
+    if config.clopt('update'):
+        package_set = package_set.updates()
     build_order = get_build_order(package_set)
     process_list(build_order, package_set)
     sys.exit(0)

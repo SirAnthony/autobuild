@@ -14,7 +14,7 @@ class AttrDict(dict):
             return None
 
     def __setattr__(self, item, value):
-        if self.__dict__.has_key(item):
+        if item in self.__dict__:
             dict.__setattr__(self, item, value)
         else:
             if isinstance(value, dict):

@@ -4,7 +4,8 @@ import os, getopt, sys
 import json
 from . import settings
 from . import options
-from .output import set_level, error as _e
+from . import output
+from .output import error as _e, info as _
 import re
 
 
@@ -13,8 +14,6 @@ def options_parse(argv):
     Return options found in argv.
     prog will be to usage() when --help is requested.
     version will be printed for --version.
-    The first items of argv must be an option, not the executable name like
-    in sys.argv!
     The result has the format {section: {option: value}}
     """
     try:
@@ -32,9 +31,9 @@ def options_parse(argv):
         if o in ('-h', '--help'):
             options.usage(settings.PROG_NAME)
         elif o == '--debug':
-            set_level('debug')
+            output.set_level('debug')
         elif o == '--version':
-            print settings.VERSION
+            _("{0}", settings.VERSION)
             sys.exit(2)
 
         name, opt = options.SHORT.get(o,
@@ -83,6 +82,8 @@ def parse_input(args):
 def clopt(name, default=None):
     return CL_OPTS.get(name, default)
 
+def bare_opts():
+    return options.BARE_OPTIONS & set(CL_OPTS.keys())
 
 default_opts = {
     'path': '',
@@ -95,4 +96,5 @@ extend_settings(run_opts)
 package_list = parse_input(run_args)
 
 
-__all__ = ['run_opts', 'run_args', 'packages_list', 'clopt']
+__all__ = ['run_opts', 'run_args', 'packages_list', 'clopt', 'bare_opts',]
+

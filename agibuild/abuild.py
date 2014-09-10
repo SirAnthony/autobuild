@@ -3,9 +3,7 @@
 from . import settings
 from .path import guess_path
 from .utils import popen
-from .output import ( info as _,
-                      debug as _d,
-                      error as _e )
+from .output import (info as _, debug as _d, error as _e)
 
 import json
 import os
@@ -19,19 +17,18 @@ ABUILD_VARS = MANDATORY_VARS + OPTIONAL_VARS
 
 
 VER_OPS = {
-  '==': '__eq__',
-  '=': '__eq__',
-  '>=': '__gte__',
-  '<=': '__lte__',
-  '>': '__gt__',
-  '<': '__lt__',
-  '!=': '__ne__'
+    '==': '__eq__',
+    '=': '__eq__',
+    '>=': '__gte__',
+    '<=': '__lte__',
+    '>': '__gt__',
+    '<': '__lt__',
+    '!=': '__ne__'
 }
 
 
 class AbuildError(Exception):
     pass
-
 
 
 class AbuildMeta(type):
@@ -55,8 +52,7 @@ class AbuildMeta(type):
             return Abuild(name)
 
         cls._cache[path] = abuild = super(AbuildMeta, cls).__call__(
-                                            name, path, abuild_dir,
-                                            *args, **kwargs)
+            name, path, abuild_dir, *args, **kwargs)
         return abuild
 
 
@@ -70,12 +66,12 @@ class Abuild(object):
         data, error = popen(script, abuild, *ABUILD_VARS)
         if error:
             raise _e(u"{c.red}Error in abuild {c.yellow}{0}{c.red}:\n{1}",
-                        AbuildError, name, error.decode("utf-8"))
+                     AbuildError, name, error.decode("utf-8"))
         data = json.loads(data)
         for key, value in data.items():
             if key not in ABUILD_VARS:
                 raise _e("{c.red}Unexpected key {c.cyan}{0}{c.red} in \
-ABUILD {c.yellow}{1}{c.red}. Probably script error.", AbuildError, key ,name)
+ABUILD {c.yellow}{1}{c.red}. Probably script error.", AbuildError, key, name)
             if not value and key in MANDATORY_VARS:
                 raise _e("{c.red}Variable {c.cyan}{0}{c.red} not found \
 in ABUILD {c.yellow}{1}", AbuildError, key, name)
@@ -83,10 +79,8 @@ in ABUILD {c.yellow}{1}", AbuildError, key, name)
             setattr(self, key, value)
         self.parse_deps()
 
-
     def pkg_list(pkgname):
         return self.pkglist.split()
-
 
     def parse_deps(self):
         def _parse(pkgname):
@@ -106,13 +100,11 @@ in ABUILD {c.yellow}{1}", AbuildError, key, name)
         self.adddep = adeps.keys()
 
 
-
 def get_path(pkgname):
     global DEFAULT_PATH
     if not DEFAULT_PATH:
         DEFAULT_PATH = guess_path(settings.ABUILD_PATH)
     return os.path.join(DEFAULT_PATH.localpath, pkgname)
-
 
 
 __all__ = ['Abuild', 'AbuildError', 'DEFAULT_PATH']

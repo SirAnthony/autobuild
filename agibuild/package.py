@@ -13,12 +13,9 @@ from mpkg.support import compareVersions
 import os.path
 
 
-
 PKG_STATUS_NAMES = ('build', 'keep', 'install', 'missing')
 PKG_STATUS = AttrDict([(name, n) for n, name in enumerate(PKG_STATUS_NAMES)])
 PKG_STATUS_STR = AttrDict([(name, name) for name in PKG_STATUS_NAMES])
-
-
 
 
 mpkg_db = SkyFront('sqlite', '/var/mpkg/packages.db')
@@ -43,9 +40,9 @@ class PackageMeta(type):
             if not claimer or claimer.name == name:
                 return provider
             _w("""{c.yellow}Looks like one package ({c.cyan}{0}"""\
-               """{c.yellow}) ot its base package in provides of another """\
+               """{c.yellow}) or its base package in provides of another """\
                """({c.cyan}{1}{c.yellow}) but both selected to build. """\
-               """Behaviour of this case is undefined, build may fails """\
+               """Behaviour of this case is undefined, build may fail """\
                """eventually.""", name, provider.name)
 
 
@@ -86,9 +83,9 @@ class PackageMeta(type):
                 continue
             if inst:
                 pkg._installed = ver
-            if not hasattr(pkg, '_avaliable_list'):
-                pkg._avaliable_list = []
-            pkg._avaliable_list.append(ver)
+            if not hasattr(pkg, '_available_list'):
+                pkg._available_list = []
+            pkg._available_list.append(ver)
 
     @classmethod
     def fetch_dependencies(cls, pkgset):
@@ -189,19 +186,19 @@ class Package(object):
         return self._installed
 
     @property
-    def avaliable(self):
-        if not hasattr(self, '_avaliable'):
-            if hasattr(self, '_avaliable_list'):
-                self._avaliable = reduce(lambda av, pkg: av if \
+    def available(self):
+        if not hasattr(self, '_available'):
+            if hasattr(self, '_available_list'):
+                self._available = reduce(lambda av, pkg: av if \
                         compareVersions(str(av[0]), str(av[1]),
                         str(pkg[0]), str(pkg[1])) > 0 else pkg,
-                        self._avaliable_list)
+                        self._available_list)
             else:
                 stat, data = mpkg_db.getRecords('packages',
                                 ['package_version', 'package_build'],
                                 limit=1, package_name=self.name)
-                self._avaliable = data[0] if data else ()
-        return self._avaliable
+                self._available = data[0] if data else ()
+        return self._available
 
 
     @property
@@ -251,7 +248,7 @@ class Package(object):
             if config.clopt('update') and self.updatable:
                 return PKG_STATUS_STR.build
             return PKG_STATUS_STR.keep
-        elif self.avaliable and not config.clopt('skip_install'):
+        elif self.available and not config.clopt('skip_install'):
             return PKG_STATUS_STR.install
         elif self.buildable:
             return PKG_STATUS_STR.build
@@ -262,7 +259,7 @@ class Package(object):
         if status == PKG_STATUS_STR.missing or config.clopt('list_order'):
             version = ''
         elif status == PKG_STATUS_STR.install:
-            version = '[{0}-{1}]'.format(*self.avaliable)
+            version = '[{0}-{1}]'.format(*self.available)
         elif status == PKG_STATUS_STR.keep:
             version = '[{0}-{1}]'.format(*self.installed)
         else:
@@ -278,7 +275,7 @@ class Package(object):
 
         depends = ''
         if self.dep_for:
-            do_dep = getattr(settings, 'PRINT_DEPENDS', False)
+            do_dep = settings.opt('print_depends', False)
             if do_dep or status == PKG_STATUS_STR.missing:
                 depends = [' <={c.miss_dep}']
                 depends.extend([p.name for p in self.dep_for])

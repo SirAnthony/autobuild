@@ -13,7 +13,7 @@ from math import log10, ceil
 import subprocess
 import os
 import sys
-
+import time
 
 
 def print_instructions(packages):
@@ -46,7 +46,7 @@ def print_instructions(packages):
 def get_build_instructions(package_list, origin_package_set):
     # Place packages according to it's action types
     packages = {}
-    norebuild = settings.opt('no_rebuild_installed')
+    rebuild_installed = settings.opt('rebuild_installed')
     build_keep = config.clopt('build_keep')
     for package in package_list:
         action = package.action(origin_package_set)
@@ -54,7 +54,7 @@ def get_build_instructions(package_list, origin_package_set):
             packages[action] = []
         packages[action].append(package)
         # Add package to build order if it must be rebuilt
-        rebuild = ((action == PKG_STATUS_STR.install and not norebuild)
+        rebuild = ((action == PKG_STATUS_STR.install and rebuild_installed)
                 or (action == PKG_STATUS_STR.keep and build_keep ))
         if rebuild:
             if package.buildable:
@@ -86,26 +86,41 @@ def build_packages(build):
     skip = int(config.clopt('start_from', 0))
     skip_failed = settings.opt('skip_failed')
     mkpkg_opts = '' if settings.opt('no_install') else '-si'
+    outfile = config.clopt("output_file")
+    status = []
 
+    logdir = os.path.join(settings.LOG_PATH, "build", "{0:d}".format(time.time()))
+    os.mkdir(logdir)
     for counter, package in enumerate(build):
         if counter < skip:
             continue
+        state_item = {}
         s = "[{0}/{1}] {2}: building...".format(counter+1, total, package)
-        sys.stdout.write("\x1b]2;{0}\x07".format(s))
-        sys.stdout.flush()
+        logfile = os.path.join(logdir, "{0}{1:d}.log".format(package.name, time.time()))
+        output_method =  ">" if outfile else "| tee"
+        if sys.stdout.isatty():
+            sys.stdout.write("\x1b]2;{0}\x07".format(s))
+            sys.stdout.flush()
         _("{c.green}" + s)
 
         path = package.abuild.location
-        if subprocess.call("cd {0} && mkpkg {1}".format(path, mkpkg_opts), shell=True):
+        command = "cd {0} && mkpkg {1} {2} {3} 2>&1".format(path, mkpkg_opts,
+                output_method, logfile)
+        ext_code = subprocess.call(command, shell=True)
+        status.append({"code": ext_code, "output": logfile, "success": bool(!ext_code)})
+        if ext_code:
             _w("{c.red}BUILD FAILED")
             if not skip_failed:
                 _e("{c.red}Package {c.cyan}{0}{c.red} failed to build, stopping.", None, package.name)
                 _("""{c.white}Successfully built: {c.bold}{c.yellow}{0}{c.white}{c.end}"""\
                   """ of {c.bold}{c.yellow}{1}{c.white}{c.end} packages.""", counter, total)
-                return
+                break
         else:
             _("{c.green}BUILD OK")
 
+    if outfile:
+        with open(outfile, 'w') as ofile:
+            json.dump(status, o)
 
 
 def process_list(package_list, origin_package_set):
@@ -152,3 +167,6 @@ def process_list(package_list, origin_package_set):
 
     install_packages(packages.get(PKG_STATUS_STR.install, []))
     build_packages(build_order)
+
+
+__all__ = ['process_list']

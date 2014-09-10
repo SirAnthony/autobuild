@@ -4,10 +4,7 @@ from . import loop
 from .oset import OrderedSet
 from .pset import PackageSet
 from .utils import print_array
-from .output import ( info as _,
-                      debug as _d,
-                      error as _e )
-
+from .output import (info as _, debug as _d, error as _e)
 
 
 def get_combined_check_list(build_order, loop_register_data):
@@ -22,9 +19,8 @@ class Resolver(object):
     def __init__(self, packages):
         if not isinstance(packages, PackageSet):
             raise _e("{c.red}Bad type for package list: {c.yellow}{0}",
-                        TypeError, type(packages))
+                     TypeError, type(packages))
         self.packages = packages
-
 
     def init_resolver(self):
         self.step = 0
@@ -35,17 +31,14 @@ class Resolver(object):
         unprocessed = set(self.packages) - build_order
 
         self.build_order = sorted(build_order, key=lambda p: p.name)
-        self.unprocessed = sorted(
-            sorted(unprocessed, key=lambda p: p.name),
-                lambda p1, p2: cmp(p2.priority, p1.priority))
-
+        self.unprocessed = sorted(sorted(unprocessed, key=lambda p: p.name),
+                                  lambda p1, p2: cmp(p2.priority, p1.priority))
 
     def log_step(self, part):
-        _d("""{c.white}Step {c.bold}{c.yellow}{0}{c.end}{c.white}/part """\
-          """{c.bold}{c.yellow}{1}{c.end}, in queue: {c.cyan}{2}{c.white}"""\
-          """ packages, enqueued: {c.green}{3}{c.white}.""",
-            self.step, part, len(self.unprocessed), len(self.build_order))
-
+        _d("{c.white}Step {c.bold}{c.yellow}{0}{c.end}{c.white}/part "
+           "{c.bold}{c.yellow}{1}{c.end}, in queue: {c.cyan}{2}{c.white}"
+           " packages, enqueued: {c.green}{3}{c.white}.",
+           self.step, part, len(self.unprocessed), len(self.build_order))
 
     def resolve_loop(self, l):
         # Check if loop_order is resolvable by build_order and loop_order
@@ -57,7 +50,8 @@ class Resolver(object):
         build_order = self.build_order
         unprocessed = self.unprocessed
 
-        _d("\n\n\n{0}Loop order detected to be resolvable. Loop itself:{0}", '-'*11)
+        _d("\n\n\n{0}Loop order detected to be resolvable. Loop itself:{0}",
+           '-'*11)
         print_array(l, _d)
         _d("{0}Build order:{0}", '='*31)
         print_array(build_order, _d)
@@ -84,37 +78,36 @@ class Resolver(object):
 
         return len(l) + (merge_position - stuck_position)
 
-
     def check_loops(self):
         # Debug check (catches a case when in_queue is calculated incorrectly
         build_order = self.build_order
         unprocessed = self.unprocessed
         if not unprocessed:
-            raise _e("CODE ERROR: Loop detected, but no loop really exist.", ValueError)
+            raise _e("CODE ERROR: Loop detected, but no loop really exist.",
+                     ValueError)
 
         # Find a known loop which contains at least one of stucked packages
         loop_order = loop.loop_for(unprocessed, self.loop_register)
 
         if not loop_order:
             print_array(loop_order, _d)
-            raise _e("Unresolvable loop detected, fix known loops and try again", ValueError)
+            raise _e("Unresolvable loop detected, fix known loops and try "
+                     "again", ValueError)
 
         # Throw error if loop is invalid
         loop_order.check_valid(self.packages)
 
         # Add loop deps
         order_set = PackageSet(loop_order)
-        deps = filter(lambda x: x not in build_order and \
-                                x not in unprocessed and \
-                                x not in loop_order,
-                                order_set.get_dep_tree())
+        deps = filter(lambda x: x not in build_order and
+                      x not in unprocessed and x not in loop_order,
+                      order_set.get_dep_tree())
         self.unprocessed.extend(deps)
 
         loop_order.position = len(self.build_order)
         self.loop_register.append(loop_order)
         _d("Registering loop: {0}. Total loops count: {1}", loop_order,
-            len(self.loop_register))
-
+           len(self.loop_register))
 
     def advance_loops(self):
         ret = 0
@@ -122,7 +115,6 @@ class Resolver(object):
         for item in self.loop_register:
             ret += self.resolve_loop(item)
         return ret
-
 
     def check_ready(self):
         """
@@ -163,7 +155,8 @@ If success, package is added to build_order
             for package in priorities:
                 count += add_package(package)
             if len(check_array) == check_len:
-                break # We in loop
+                # We in loop
+                break
             check_len = len(check_array)
 
         # next process other packages
@@ -171,7 +164,6 @@ If success, package is added to build_order
             count += add_package(package)
 
         return count
-
 
     def _next(self):
         self.step += 1
@@ -188,16 +180,15 @@ If success, package is added to build_order
             this_move = True
             _d("{c.white}Part 2 (LOOP): move {c.yellow}{0}", loop_move)
 
-        # Checking counters: we need to find out is there any advance in previous step
-        # If old and current sizes match - no advance was made.
-        # It means, that we are stuck on a dependency loop
+        # Checking counters: we need to find out is there any advance in
+        # previous step. If old and current sizes match - no advance was
+        # made. It means, that we are stuck on a dependency loop
         if not this_move:
             self.check_loops()
             this_move = True
 
     def resolve(self):
         self.init_resolver()
-        #import pudb; pudb.set_trace()
         while len(self.unprocessed):
             self._next()
         return self.build_order

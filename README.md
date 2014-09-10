@@ -35,5 +35,5 @@ Typical usage for serious mantainer. Build almost everything: all dependencies a
 
 TODO
 -----
-* Install order (install packages when it requires only if all required packages is avaliable)
+* Install order (install packages when it requires only if all required packages is available)
 * Minimal build (install dependencies only when it required and remove when it not needed)

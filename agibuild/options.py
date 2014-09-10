@@ -46,6 +46,7 @@ All preceding packages will be skipped', 'start_from', 1),
     ('K', 'show-keep', 'Show packages which will be keep.', 'show_keep', 0),
     ('i', 'skip-install', 'Does not install anything before build.', 'skip_install', 0),
     ('v', 'debug', 'Print debug information.', 'debug', 0),
+    ('O', 'output-file', 'Print status of build in JSON to file', 'output_file', 1),
     ('c', 'accurate-mode', 'Avoid packages from build list to get in dependance \
 of each other. This will install package only when it required for building and remove \
 immediately after its dependances was built. This mode require precise build_deps \
@@ -56,8 +57,7 @@ SETTINGS_OPTS = (
     ('a', 'ask', 'Wait for user desigion to build packages', 'ask', 0),
     ('t', 'abuilds-tree', 'Specify path to directory with abuilds', 'abuild_path', 1),
     ('m', 'ignore-missing', 'Ignore missing packages', 'ignore_missing', 0),
-    ('R', 'no-rebuild-installed', 'Does not rebuild packages must be installed',
-        'no_rebuild_installed', 0),
+    ('R', 'rebuild-installed', 'Rebuild packages must be installed', 'rebuild_installed', 0),
     ('f', 'skip-failed', 'Continue if some packages failed to build', 'skip_failed', 0),
     ('I', 'no-install', 'Does not install packages after build', 'no_install', 0),
     ('C', 'no-color', 'Disable colors of output', 'no_color', 0),
@@ -66,7 +66,7 @@ SETTINGS_OPTS = (
 
 
 OPTIONS = CL_OPTS + SETTINGS_OPTS
-
+BARE_OPTIONS = set(['u', ])
 
 SHORT = dict([('-{0}'.format(x[0]), x[-2:]) for x in OPTIONS])
 LONG = dict([('--{0}'.format(x[1]), x[-2:]) for x in OPTIONS])
@@ -76,5 +76,5 @@ CL = [opt[3] for opt in CL_OPTS]
 
 
 
-__all__ = ['usage', 'OPTIONS', 'SHORT', 'LONG',
+__all__ = ['usage', 'OPTIONS', 'BARE_OPTIONS', 'SHORT', 'LONG',
            'GETOPT_SHORT', 'GETOPT_LONG', 'CL']
