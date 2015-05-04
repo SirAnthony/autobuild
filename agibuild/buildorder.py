@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 
 from . import config
+from . import settings
+from . import install
 from .package import Package
 from .pset import PackageSet
 from .resolver import Resolver
@@ -18,7 +20,7 @@ def get_build_order(package_set):
     package_set.merge()
     Package.fetch_versions()
     _("{c.green}Building tree...")
-    deps = package_set.get_dep_tree()
+    deps = package_set.get_dep_tree(install.build())
     _("{c.green}Merging subpackages...")
     # Always merge multipackages. From now, this is mandatory.
     deps = PackageSet(deps).merge_multi_packages()

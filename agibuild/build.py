@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from . import settings, config
+from . import install
 from .oset import OrderedSet
 from .adict import AttrDict
 from .package import Package, PKG_STATUS_STR, PKG_STATUS_NAMES
@@ -42,7 +43,6 @@ def print_instructions(packages):
     _("Total: {c.version}{c.bold}{0}{c.end} " + ''.join(totalstr), total)
 
 
-
 def get_build_instructions(package_list, origin_package_set):
     # Place packages according to it's action types
     packages = {}
@@ -53,9 +53,13 @@ def get_build_instructions(package_list, origin_package_set):
         if action not in packages:
             packages[action] = []
         packages[action].append(package)
+        if action == PKG_STATUS_STR.install and not rebuild_installed:
+            _e("""{c.red}Internal error: package {c.yellow}{0}{c.red}"""\
+               """ must not be installed in build phase. Exiting.""")
+            return
         # Add package to build order if it must be rebuilt
         rebuild = ((action == PKG_STATUS_STR.install and rebuild_installed)
-                or (action == PKG_STATUS_STR.keep and build_keep ))
+                or (action == PKG_STATUS_STR.keep and build_keep))
         if rebuild:
             if package.buildable:
                 build_name = PKG_STATUS_STR.build
@@ -65,18 +69,11 @@ def get_build_instructions(package_list, origin_package_set):
                 packages[build_name] = []
             packages[build_name].append(package)
 
-    for key in (PKG_STATUS_STR.install, PKG_STATUS_STR.keep, PKG_STATUS_STR.missing):
+    for key in (PKG_STATUS_STR.keep, PKG_STATUS_STR.missing):
         if key in packages:
             packages[key] = list(OrderedSet(packages[key]))
 
     return packages
-
-
-def install_packages(install):
-    if not install:
-        return
-    subprocess.check_call(['mpkg-install {0}'.format(
-            ' '.join(map(lambda x: x.name, install)))], shell=True)
 
 
 def build_packages(build):
@@ -102,6 +99,11 @@ def build_packages(build):
             sys.stdout.write("\x1b]2;{0}\x07".format(s))
             sys.stdout.flush()
         _("{c.green}" + s)
+        if config.clopt('accurate'):
+            _("{c.green} installing dependencies")
+            install.from_list(package.deps)
+            install.from_list(package.installdeps)
+            # TODO: log installed packages to status
 
         path = package.abuild.location
         command = "cd {0} && mkpkg {1} {2} {3} 2>&1".format(path, mkpkg_opts,
@@ -125,6 +127,9 @@ def build_packages(build):
 
 def process_list(package_list, origin_package_set):
     packages = get_build_instructions(package_list, origin_package_set)
+    if packages is None:
+        return
+
     print_instructions(packages)
 
     no_deps = [p.name for p in package_list if not p.deps]
@@ -164,9 +169,11 @@ def process_list(package_list, origin_package_set):
         answer = ''.join(sys.stdin.read(1).splitlines())
         if answer not in ('', 'y', 'Y'):
             return
-
-    install_packages(packages.get(PKG_STATUS_STR.install, []))
+    if not config.clopt('accurate'):
+        install.process(packages)
     build_packages(build_order)
-
+    if config.clopt('accurate'):
+        _("{c.green} removing installed packages due to accurate mode")
+        install.remove_installed()
 
 __all__ = ['process_list']

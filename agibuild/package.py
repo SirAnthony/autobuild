@@ -45,8 +45,6 @@ class PackageMeta(type):
                """Behaviour of this case is undefined, build may fail """\
                """eventually.""", name, provider.name)
 
-
-
         cls._cache[name] = package
         return package
 

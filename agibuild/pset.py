@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 """PackageSet class"""
-from . import settings
 from .package import Package, mpkg_db
 from .mset import MergableSet
 from .output import error as _e
@@ -20,17 +19,16 @@ class PackageSet(MergableSet):
         for package in list(self):
             self.update(package.dependants)
 
-    def get_dep_tree(self):
+    def get_dep_tree(self, add_install):
         """Recursively get all dependencides of packages in set."""
         if not len(self):
             return []
         unprocessed = set(self)
         processed = PackageSet()
-        adddep = not settings.opt('no_install')
         while unprocessed:
             for package in list(unprocessed):
                 unprocessed |= package.deps - processed
-                if adddep:
+                if add_install:
                     unprocessed |= package.installdeps - processed
                 processed.add(package)
                 unprocessed.remove(package)

@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from . import loop
+from . import install
 from .oset import OrderedSet
 from .pset import PackageSet
 from .utils import print_array
@@ -101,7 +102,7 @@ class Resolver(object):
         order_set = PackageSet(loop_order)
         deps = filter(lambda x: x not in build_order and
                       x not in unprocessed and x not in loop_order,
-                      order_set.get_dep_tree())
+                      order_set.get_dep_tree(install.build()))
         self.unprocessed.extend(deps)
 
         loop_order.position = len(self.build_order)
