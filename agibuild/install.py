@@ -13,7 +13,7 @@ def build():
     return settings.opt('rebuild_installed') \
         and not settings.opt('no_install')
 
-def from_list(packages, origin):
+def from_list(packages, origin=[]):
     if not packages or settings.opt('no_install'):
         return
     def need_install(package):

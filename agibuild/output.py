@@ -5,8 +5,6 @@ from .adict import AttrDict
 import json
 import logging
 
-
-
 BASE_COLORS = {
     'default': '\033[39m',
     'black': '\033[30m',

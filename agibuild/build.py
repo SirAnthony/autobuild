@@ -86,15 +86,18 @@ def build_packages(build):
     outfile = config.clopt("output_file")
     status = []
 
-    logdir = os.path.join(settings.LOG_PATH, "build", "{0:d}".format(time.time()))
-    os.mkdir(logdir)
+    logdir = os.path.join(settings.LOG_PATH, "build", "{0:.0f}".format(time.time()))
+    if not os.path.isdir(logdir):
+        os.makedirs(logdir)
     for counter, package in enumerate(build):
         if counter < skip:
             continue
         state_item = {}
         s = "[{0}/{1}] {2}: building...".format(counter+1, total, package)
-        logfile = os.path.join(logdir, "{0}{1:d}.log".format(package.name, time.time()))
+        logfile = os.path.join(logdir, "{0}{1:.0f}.log".format(package.name, time.time()))
         output_method =  ">" if outfile else "| tee"
+        # FIMXE: bash-only?
+        output_add = "" if outfile else "; ( exit ${PIPESTATUS[0]} )"
         if sys.stdout.isatty():
             sys.stdout.write("\x1b]2;{0}\x07".format(s))
             sys.stdout.flush()
@@ -106,8 +109,8 @@ def build_packages(build):
             # TODO: log installed packages to status
 
         path = package.abuild.location
-        command = "cd {0} && mkpkg {1} {2} {3} 2>&1".format(path, mkpkg_opts,
-                output_method, logfile)
+        command = "cd {0} && mkpkg {1} {2} {3} 2>&1 {4} ".format(path, mkpkg_opts,
+                output_method, logfile, output_add)
         ext_code = subprocess.call(command, shell=True)
         status.append({"code": ext_code, "output": logfile, "success": bool(not ext_code)})
         if ext_code:
@@ -170,7 +173,7 @@ def process_list(package_list, origin_package_set):
         if answer not in ('', 'y', 'Y'):
             return
     if not config.clopt('accurate'):
-        install.process(packages)
+        install.from_list(package_list, origin_package_set)
     build_packages(build_order)
     if config.clopt('accurate'):
         _("{c.green} removing installed packages due to accurate mode")

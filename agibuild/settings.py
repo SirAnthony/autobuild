@@ -60,7 +60,7 @@ LOG_CONFIG = {
         },
         'file': {
             'class': 'logging.handlers.RotatingFileHandler',
-            'filename': LOG_PATH, 'maxBytes': 100000,
+            'filename': LOG_PATH+'.out', 'maxBytes': 100000,
             'backupCount': 5, 'formatter': 'error', 'level': 'ERROR'
         }
     },
