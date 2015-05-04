@@ -6,7 +6,7 @@ from os import path, makedirs
 import sys
 
 # Current version string
-VERSION = '0.3.2.1'
+VERSION = '0.3.3'
 PROG_NAME = path.basename(sys.argv[0])
 
 
