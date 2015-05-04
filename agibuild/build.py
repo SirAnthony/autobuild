@@ -107,7 +107,7 @@ def build_packages(build):
         command = "cd {0} && mkpkg {1} {2} {3} 2>&1".format(path, mkpkg_opts,
                 output_method, logfile)
         ext_code = subprocess.call(command, shell=True)
-        status.append({"code": ext_code, "output": logfile, "success": bool(!ext_code)})
+        status.append({"code": ext_code, "output": logfile, "success": bool(not ext_code)})
         if ext_code:
             _w("{c.red}BUILD FAILED")
             if not skip_failed:

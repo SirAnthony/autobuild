@@ -3,6 +3,7 @@
 *.db
 *.dot
 *.png
+*.swp
 
 # generated stuff
 build/

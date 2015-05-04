@@ -212,7 +212,8 @@ class Package(object):
     @property
     def updatable(self):
         if not hasattr(self, '_updatable'):
-            self._updatable = self.vercmp(*self.installed)
+            self._updatable = -1 if not self.installed \
+                else self.vercmp(*self.installed)
         return self._updatable > 0
 
     def enqueue(self, build_order, loops=[]):
